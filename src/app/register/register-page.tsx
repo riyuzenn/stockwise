@@ -106,12 +106,6 @@ export default function RegisterPage() {
               </div>
             </form>
           </Form>
-          <p className="pt-4">
-            Already have an account?{' '}
-            <a href="/login" className="text-blue-500 underline">
-              Log in
-            </a>
-          </p>
         </div>
       </div>
     </React.Fragment>
