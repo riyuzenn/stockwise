@@ -16,7 +16,6 @@ import {
   FormControl,
   FormMessage,
 } from '@/components/ui/form'
-import Plasma from '@/components/Plasma'
 import axios from 'axios'
 import { usePathname } from 'next/navigation'
 
