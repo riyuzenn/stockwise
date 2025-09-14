@@ -1,8 +1,8 @@
-import { NextResponse } from "next/server"
-import { connectDB } from "@/lib/mongoose"
-import { User } from "@/models/user"
-import bcrypt from "bcryptjs"
-import { signToken } from "@/lib/jwt"
+import { NextResponse } from 'next/server'
+import { connectDB } from '@/lib/mongoose'
+import { User } from '@/models/user'
+import bcrypt from 'bcryptjs'
+import { signToken } from '@/lib/jwt'
 
 export async function POST(req: Request) {
   try {
@@ -11,24 +11,24 @@ export async function POST(req: Request) {
 
     const user = await User.findOne({ username })
     if (!user) {
-      return NextResponse.json({ error: "Invalid credentials" }, { status: 401 })
+      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
     }
 
     const isValid = await bcrypt.compare(password, user.password)
     if (!isValid) {
-      return NextResponse.json({ error: "Invalid credentials" }, { status: 401 })
+      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
     }
 
     const token = signToken({ id: user._id, username: user.username })
 
-    const res = NextResponse.json({ message: "Login successful" })
+    const res = NextResponse.json({ message: 'Login successful' })
 
     res.cookies.set({
-      name: "session",
+      name: 'session',
       value: token,
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
+      secure: process.env.NODE_ENV === 'production',
+      path: '/',
       maxAge: 60 * 60 * 24 * 7, // 7 days
     })
 

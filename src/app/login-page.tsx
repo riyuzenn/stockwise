@@ -21,7 +21,7 @@ import axios from 'axios'
 import { usePathname } from 'next/navigation'
 
 const loginSchema = z.object({
-  username: z.string().nonempty("Please enter valid username"),
+  username: z.string().nonempty('Please enter valid username'),
   password: z.string().min(6),
 })
 
@@ -31,7 +31,7 @@ export default function LoginPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const pathName = usePathname();
+  const pathName = usePathname()
 
   const form = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
@@ -56,7 +56,7 @@ export default function LoginPage() {
   }
 
   return (
-    <React.Fragment> 
+    <React.Fragment>
       <div className="flex min-h-screen justify-center items-center">
         <div>
           <h1 className="scroll-m-20 text-center text-4xl font-extrabold tracking-tight text-balance">
@@ -72,11 +72,7 @@ export default function LoginPage() {
                     <FormItem>
                       <FormLabel>Username</FormLabel>
                       <FormControl>
-                        <Input
-                          className="h-12 pl-4"
-                          placeholder="Enter your username"
-                          {...field}
-                        />
+                        <Input className="h-12 pl-4" placeholder="Enter your username" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

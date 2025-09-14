@@ -1,9 +1,8 @@
-
-import { NextResponse } from "next/server"
-import bcrypt from "bcryptjs"
-import { connectDB } from "@/lib/mongoose"
-import { User } from "@/models/user"
-import { signToken } from "@/lib/jwt"
+import { NextResponse } from 'next/server'
+import bcrypt from 'bcryptjs'
+import { connectDB } from '@/lib/mongoose'
+import { User } from '@/models/user'
+import { signToken } from '@/lib/jwt'
 
 export async function POST(req: Request) {
   try {
@@ -12,10 +11,7 @@ export async function POST(req: Request) {
 
     const existingUser = await User.findOne()
     if (existingUser) {
-      return NextResponse.json(
-        { error: "An admin account already exists" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'An admin account already exists' }, { status: 400 })
     }
 
     const hashedPassword = await bcrypt.hash(password, 10)
@@ -28,16 +24,16 @@ export async function POST(req: Request) {
     const token = signToken({ id: user._id, username: user.username })
 
     const res = NextResponse.json({
-      message: "User registered successfully",
+      message: 'User registered successfully',
       user: { id: user._id, username: user.username },
     })
 
     res.cookies.set({
-      name: "session",
+      name: 'session',
       value: token,
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
+      secure: process.env.NODE_ENV === 'production',
+      path: '/',
       maxAge: 60 * 60 * 24 * 7, // 7 days
     })
 
@@ -46,4 +42,3 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: err.message }, { status: 500 })
   }
 }
-

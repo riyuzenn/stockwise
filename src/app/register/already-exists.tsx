@@ -1,16 +1,15 @@
+'use client'
 
-"use client"
-
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 export default function AlreadyExists() {
   const router = useRouter()
-  const [seconds, setSeconds] = useState(3) 
+  const [seconds, setSeconds] = useState(3)
 
   useEffect(() => {
     if (seconds <= 0) {
-      router.push("/") 
+      router.push('/')
       return
     }
 
@@ -24,11 +23,10 @@ export default function AlreadyExists() {
   return (
     <div className="flex min-h-screen items-center justify-center">
       <p className="text-lg font-semibold">
-        Admin already exists. Redirecting to login in{" "}
-        <span className="font-bold">{seconds}</span> second
-        {seconds !== 1 ? "s" : ""}...
+        Admin already exists. Redirecting to login in <span className="font-bold">{seconds}</span>{' '}
+        second
+        {seconds !== 1 ? 's' : ''}...
       </p>
     </div>
   )
 }
-

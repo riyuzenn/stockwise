@@ -1,15 +1,14 @@
+'use client'
 
-"use client"
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { z } from 'zod'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useForm } from 'react-hook-form'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { z } from "zod"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-
-import React from "react"
+import React from 'react'
 import {
   Form,
   FormField,
@@ -17,13 +16,13 @@ import {
   FormLabel,
   FormControl,
   FormMessage,
-} from "@/components/ui/form"
-import Plasma from "@/components/Plasma"
-import axios from "axios"
+} from '@/components/ui/form'
+import Plasma from '@/components/Plasma'
+import axios from 'axios'
 
 const registerSchema = z.object({
-  username: z.string().nonempty("Username is required"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  username: z.string().nonempty('Username is required'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
 })
 
 type RegisterValues = z.infer<typeof registerSchema>
@@ -35,7 +34,7 @@ export default function RegisterPage() {
 
   const form = useForm<RegisterValues>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { username: "", password: "" },
+    defaultValues: { username: '', password: '' },
   })
 
   const onSubmit = async (values: RegisterValues) => {
@@ -43,13 +42,13 @@ export default function RegisterPage() {
     setError(null)
 
     try {
-      await axios.post("/api/auth/register", values)
-      router.push("/dashboard")
+      await axios.post('/api/auth/register', values)
+      router.push('/dashboard')
     } catch (err: any) {
       if (axios.isAxiosError(err)) {
-        setError(err.response?.data?.error || "Registration failed")
+        setError(err.response?.data?.error || 'Registration failed')
       } else {
-        setError("Unexpected error")
+        setError('Unexpected error')
       }
     } finally {
       setLoading(false)
@@ -58,7 +57,6 @@ export default function RegisterPage() {
 
   return (
     <React.Fragment>
-     
       <div className="flex min-h-screen justify-center items-center">
         <div className="">
           <h1 className="scroll-m-20 text-center text-4xl font-extrabold tracking-tight text-balance">
@@ -74,11 +72,7 @@ export default function RegisterPage() {
                     <FormItem>
                       <FormLabel>Username</FormLabel>
                       <FormControl>
-                        <Input
-                          className="h-12 pl-4"
-                          placeholder="Enter your username"
-                          {...field}
-                        />
+                        <Input className="h-12 pl-4" placeholder="Enter your username" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -107,13 +101,13 @@ export default function RegisterPage() {
                 {error && <p className="text-sm text-red-500">{error}</p>}
 
                 <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Registering..." : "Register"}
+                  {loading ? 'Registering...' : 'Register'}
                 </Button>
               </div>
             </form>
           </Form>
           <p className="pt-4">
-            Already have an account?{" "}
+            Already have an account?{' '}
             <a href="/login" className="text-blue-500 underline">
               Log in
             </a>
@@ -123,4 +117,3 @@ export default function RegisterPage() {
     </React.Fragment>
   )
 }
-

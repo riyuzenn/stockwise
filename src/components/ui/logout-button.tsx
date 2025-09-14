@@ -1,4 +1,3 @@
-
 'use client'
 
 import { useRouter } from 'next/navigation'
@@ -23,12 +22,7 @@ export default function LogoutButton() {
   }
 
   return (
-    <Button
-      variant="destructive"
-      onClick={handleLogout}
-      disabled={loading}
-      className="w-full"
-    >
+    <Button variant="destructive" onClick={handleLogout} disabled={loading} className="w-full">
       {loading ? 'Logging out...' : 'Logout'}
     </Button>
   )
