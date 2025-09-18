@@ -2,6 +2,7 @@
 
 
 import TestCard from '@/components/dashboard/card'
+import { TopProductChart } from '@/components/dashboard/top-product'
 import React from 'react'
 
 export default function OverviewPage() {
@@ -33,6 +34,23 @@ export default function OverviewPage() {
         </h3>
         <TestCard />
       </div>
+
+      <div className="flex flex-col gap-6 md:gap-10">
+        <h3 className="scroll-m-20 text-xl md:text-2xl font-semibold tracking-tight">
+          Top 5 Products
+        </h3>
+       <TopProductChart
+  products={[
+    { name: "Product A asdasd", sales: 320 },
+    { name: "Product B", sales: 280 },
+    { name: "Product C", sales: 210 },
+    { name: "Product D", sales: 190 },
+    { name: "Product E", sales: 120 },
+  ]}
+/>      </div>
+
+
+
     </div>
   )
 }
