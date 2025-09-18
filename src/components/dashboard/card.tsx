@@ -5,26 +5,26 @@ import { FC, ReactNode } from "react"
 import { motion } from "framer-motion"
 import { ArrowRight, Ban, Package, Flag } from "lucide-react"
 
-interface CardProps {
+interface StockLevelCardProps {
   title: string
   description: string
   value: number
   type?: "total" | "low" | "out"
 }
 
-const typeStyles: Record<NonNullable<CardProps["type"]>, string> = {
+const typeStyles: Record<NonNullable<StockLevelCardProps["type"]>, string> = {
   total: "bg-[#0a0a0a] text-white border-white/20",
   low: "bg-[#f9f06b] text-black border-[#0a0a0a]",
   out: "bg-[#F96B6B] text-white border-[#0a0a0a]",
 }
 
-const typeIcons: Record<NonNullable<CardProps["type"]>, ReactNode> = {
+const typeIcons: Record<NonNullable<StockLevelCardProps["type"]>, ReactNode> = {
   total: <Package className="w-8 h-8 text-[#f9f06b]" />, 
   low: <Flag className="w-8 h-8 text-black" />,
   out: <Ban className="w-8 h-8 text-white" />,
 }
 
-const Card: FC<CardProps> = ({ title, description, value, type = "total" }) => {
+const StockLevelCard: FC<StockLevelCardProps> = ({ title, description, value, type = "total" }) => {
   return (
     <motion.div
       whileHover={{ y: -5 }}
@@ -53,22 +53,22 @@ const Card: FC<CardProps> = ({ title, description, value, type = "total" }) => {
   )
 }
 
-const TestCard: FC = () => {
+const TestStockLevelCard: FC = () => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-      <Card
+      <StockLevelCard
         title="Total Products"
         type="total"
         value={10}
         description="All products currently in the database"
       />
-      <Card
+      <StockLevelCard
         title="Low Stock"
         value={5}
         type="low"
         description="Currently low products"
       />
-      <Card
+      <StockLevelCard
         title="Out of Stock Product"
         type="out"
         value={0}
@@ -78,5 +78,5 @@ const TestCard: FC = () => {
   )
 }
 
-export default TestCard
+export default TestStockLevelCard
 
