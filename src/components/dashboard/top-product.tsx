@@ -1,8 +1,7 @@
+'use client'
 
-"use client"
-
-import { TrendingUp } from "lucide-react"
-import { Bar, BarChart, XAxis, YAxis, Cell } from "recharts"
+import { TrendingUp } from 'lucide-react'
+import { Bar, BarChart, XAxis, YAxis, Cell } from 'recharts'
 
 import {
   Card,
@@ -11,12 +10,8 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart"
+} from '@/components/ui/card'
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
 
 type Product = {
   name: string
@@ -29,12 +24,10 @@ interface TopProductChartProps {
 
 export function TopProductChart({ products }: TopProductChartProps) {
   // take only top 5 products by sales
-  const chartData = [...products]
-    .sort((a, b) => b.sales - a.sales)
-    .slice(0, 5)
+  const chartData = [...products].sort((a, b) => b.sales - a.sales).slice(0, 5)
 
   return (
-    <Card className="w-1/2">
+    <Card className="md:w-1/2">
       <CardHeader>
         <CardTitle>Top 5 Products</CardTitle>
         <CardDescription>Based on sales</CardDescription>
@@ -42,16 +35,11 @@ export function TopProductChart({ products }: TopProductChartProps) {
       <CardContent>
         <ChartContainer
           config={{
-            sales: { label: "Sales" },
+            sales: { label: 'Sales' },
           }}
           className="max-h-64 w-full"
         >
-          <BarChart
-            accessibilityLayer
-            data={chartData}
-            layout="vertical"
-            margin={{ left: 0 }}
-          >
+          <BarChart accessibilityLayer data={chartData} layout="vertical" margin={{ left: 0 }}>
             <YAxis
               dataKey="name"
               type="category"
@@ -60,14 +48,11 @@ export function TopProductChart({ products }: TopProductChartProps) {
               axisLine={false}
               width={120}
               tickFormatter={(value: string) =>
-                value.length > 12 ? value.slice(0, 12) + "…" : value
+                value.length > 12 ? value.slice(0, 12) + '…' : value
               }
             />
             <XAxis dataKey="sales" type="number" hide />
-            <ChartTooltip
-              cursor={false}
-              content={<ChartTooltipContent hideLabel />}
-            />
+            <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
             <Bar dataKey="sales" layout="vertical" radius={[4, 4, 0, 0]}>
               {chartData.map((_, index) => {
                 // Base color #f9f06b = hsl(55, 92%, 70%)
@@ -87,13 +72,10 @@ export function TopProductChart({ products }: TopProductChartProps) {
       </CardContent>
       <CardFooter className="flex-col items-start gap-2 text-sm">
         <div className="flex gap-2 leading-none font-medium">
-          Trending up by 5.2% this month <TrendingUp className="h-4 w-4" />
+          Trending this month <TrendingUp className="h-4 w-4" />
         </div>
-        <div className="text-muted-foreground leading-none">
-          Showing top-selling products
-        </div>
+        <div className="text-muted-foreground leading-none">Showing top-selling products</div>
       </CardFooter>
     </Card>
   )
 }
-
