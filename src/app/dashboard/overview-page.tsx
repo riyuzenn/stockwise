@@ -4,6 +4,10 @@ import React from "react"
 import TestCard from "@/components/dashboard/card"
 import { InvoiceTable } from "@/components/dashboard/recent-invoice-table"
 import { TopProductChart } from "@/components/dashboard/top-product"
+import { Moon, Sun } from "lucide-react"
+import { useTheme } from "next-themes"
+import { Button } from "@/components/ui/button"
+import LogoutButton from "@/components/ui/logout-button"
 
 const sampleData = [
   {
@@ -30,16 +34,37 @@ const sampleData = [
 ]
 
 export default function OverviewPage() {
+
+  const { theme, setTheme } = useTheme();
+
   return (
-    <div className="flex flex-col gap-12 px-6 py-8 min-h-[80vh] md:px-12 md:py-10 lg:px-16">
-      <div className="flex flex-col md:flex-row md:items-center md:gap-5">
-        <h1 className="scroll-m-20 text-3xl font-extrabold tracking-tight md:text-4xl">
-          Overview
-        </h1>
-        <hr className="hidden h-9 w-[1px] border-none bg-gray-500 dark:bg-white/50 md:block" />
-        <p className="mt-2 text-gray-500 dark:text-white/50 md:mt-0">
-          Keep tracks of all your products & sales.
-        </p>
+    <div className="w-full flex flex-col gap-12 px-6 py-8 min-h-[80vh] md:px-12 md:py-10 lg:px-16">
+      <div className="flex flex-col justify-between md:flex-row md:items-center md:gap-5">
+        <div className="gap-5 flex items-center">
+          <h1 className="scroll-m-20 text-3xl font-extrabold tracking-tight md:text-4xl">
+            Overview
+          </h1>
+          <hr className="hidden h-9 w-[1px] border-none bg-gray-500 dark:bg-white/50 md:block" />
+          <p className="mt-2 text-gray-500 dark:text-white/50 md:mt-0">
+            Keep tracks of all your products & sales.
+          </p>
+        </div>
+        <div>
+          
+          <Button 
+          variant="outline"
+          size="icon"
+          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          >
+            <span>
+              {
+                theme === "dark" ? 
+                  <Sun className="h-[2rem] w-[2rem]" /> : 
+                  <Moon className="h-[2rem] w-[2rem]" />
+              }
+            </span>
+          </Button>
+        </div>
       </div>
 
       <div className="w-full rounded-md bg-[#f9f06b] px-6 py-4 text-black shadow-md dark:bg-[#d9d05a]">
@@ -79,6 +104,7 @@ export default function OverviewPage() {
           
         </div>
       </div>
+      <LogoutButton />
     </div>
   )
 }

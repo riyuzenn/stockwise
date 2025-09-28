@@ -8,6 +8,11 @@ export default function Header() {
   const { theme, setTheme } = useTheme()
   return (
     <React.Fragment>
+      <div>
+        <div className="flex justify-between px-5">
+          
+        </div>
+      </div>
       <Switch
         checked={theme === 'dark' ? true : false}
         onCheckedChange={(checked) => {
