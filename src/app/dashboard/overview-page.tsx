@@ -1,32 +1,32 @@
 // Overview Page
+'use client'
 
-import React from "react"
-import TestCard from "@/components/dashboard/card"
-import { InvoiceTable } from "@/components/dashboard/recent-invoice-table"
-import { TopProductChart } from "@/components/dashboard/top-product"
-import { Moon, Sun } from "lucide-react"
-import { useTheme } from "next-themes"
-import { Button } from "@/components/ui/button"
-import LogoutButton from "@/components/ui/logout-button"
+import React, { useState, useEffect } from 'react'
+import axios from 'axios'
+import { InvoiceTable } from '@/components/dashboard/recent-invoice-table'
+import { TopProductChart } from '@/components/dashboard/top-product'
+import LogoutButton from '@/components/ui/logout-button'
+import ThemeToggle from '@/components/dashboard/theme-toggle'
+import { Card } from '@/components/dashboard/card'
 
 const sampleData = [
   {
-    refId: "REF001",
-    productName: "Product A",
+    refId: 'REF001',
+    productName: 'Product A',
     price: 25,
     qty: 2,
     total: 50,
   },
   {
-    refId: "REF002",
-    productName: "Product B",
+    refId: 'REF002',
+    productName: 'Product B',
     price: 300,
     qty: 1,
     total: 300,
   },
   {
-    refId: "REF003",
-    productName: "Product C",
+    refId: 'REF003',
+    productName: 'Product C',
     price: 15,
     qty: 5,
     total: 75,
@@ -34,8 +34,33 @@ const sampleData = [
 ]
 
 export default function OverviewPage() {
+  const [data, setData] = useState({
+    total: 0,
+    low: 0,
+    out: 0,
+  })
 
-  const { theme, setTheme } = useTheme();
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [allRes, lowRes, outRes] = await Promise.all([
+          axios.get('/api/product/get?filter=all'),
+          axios.get('/api/product/get?filter=low-stock'),
+          axios.get('/api/product/get?filter=out-of-stock'),
+        ])
+
+        setData({
+          total: allRes.data.count,
+          low: lowRes.data.count,
+          out: outRes.data.count,
+        })
+      } catch (error) {
+        console.error('Error fetching stock data:', error)
+      }
+    }
+
+    fetchData()
+  }, [])
 
   return (
     <div className="w-full flex flex-col gap-12 px-6 py-8 min-h-[80vh] md:px-12 md:py-10 lg:px-16">
@@ -50,20 +75,7 @@ export default function OverviewPage() {
           </p>
         </div>
         <div>
-          
-          <Button 
-          variant="outline"
-          size="icon"
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          >
-            <span>
-              {
-                theme === "dark" ? 
-                  <Sun className="h-[2rem] w-[2rem]" /> : 
-                  <Moon className="h-[2rem] w-[2rem]" />
-              }
-            </span>
-          </Button>
+          <ThemeToggle />
         </div>
       </div>
 
@@ -71,16 +83,35 @@ export default function OverviewPage() {
         <h1 className="scroll-m-20 text-2xl font-bold tracking-tight md:text-3xl truncate">
           Daegu KoreanMart Indang
         </h1>
-        <p className="mt-2 text-black/70 md:mt-0 pt-2">
-          Track. Manage. Grow.
-        </p>
+        <p className="mt-2 text-black/70 md:mt-0 pt-2">Track. Manage. Grow.</p>
       </div>
 
       <div className="flex flex-col gap-6 md:gap-10">
         <h3 className="scroll-m-20 text-xl font-semibold tracking-tight md:text-2xl">
           Stock Levels
         </h3>
-        <TestCard />
+
+        {/* Stock Level Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <Card
+            title="Total Products"
+            type="total"
+            value={data.total}
+            description="All products currently in the database"
+          />
+          <Card
+            title="Low Stock"
+            type="low"
+            value={data.low}
+            description="Currently low stock products"
+          />
+          <Card
+            title="Out of Stock"
+            type="out"
+            value={data.out}
+            description="Products that require restocking"
+          />
+        </div>
       </div>
 
       <div className="flex flex-col gap-6 md:gap-10">
@@ -90,22 +121,17 @@ export default function OverviewPage() {
         <div className="flex flex-col gap-8 lg:flex-row">
           <TopProductChart
             products={[
-              { name: "Product A Extra Long Name Example", sales: 320 },
-              { name: "Product B", sales: 280 },
-              { name: "Product C", sales: 210 },
-              { name: "Product D", sales: 190 },
-              { name: "Product E", sales: 120 },
+              { name: 'Product A Extra Long Name Example', sales: 320 },
+              { name: 'Product B', sales: 280 },
+              { name: 'Product C', sales: 210 },
+              { name: 'Product D', sales: 190 },
+              { name: 'Product E', sales: 120 },
             ]}
           />
-          <InvoiceTable
-            caption="A list of recent ordered products."
-            data={sampleData}
-          />
-          
+          <InvoiceTable caption="A list of recent ordered products." data={sampleData} />
         </div>
       </div>
       <LogoutButton />
     </div>
   )
 }
-

@@ -1,6 +1,7 @@
-import React from "react"
-import { Button } from "../ui/button"
-import { FileDownIcon, Plus } from "lucide-react"
+import React from 'react'
+import { Button } from '../ui/button'
+import { FileDownIcon, Plus } from 'lucide-react'
+import { AddProductDialog } from './add-product'
 
 export function RightSideBar() {
   return (
@@ -14,9 +15,7 @@ export function RightSideBar() {
     >
       {/* Add Product */}
       <div className="flex flex-col items-center gap-3">
-        <Button variant="secondary" className="size-16 bg-black dark:bg-white rounded-full">
-          <Plus className="size-8 text-white dark:text-black" />
-        </Button>
+        <AddProductDialog />
         <p className="text-sm md:text-md">Add Product</p>
       </div>
 
@@ -30,4 +29,3 @@ export function RightSideBar() {
     </div>
   )
 }
-

@@ -1,4 +1,3 @@
-
 'use client'
 
 import {
@@ -30,9 +29,7 @@ export function InvoiceTable({ caption, data }: InvoiceTableProps) {
 
   return (
     <div className="w-full md:w-1/2 max-w-2xl">
-      <h4 className="pb-10 scroll-m-20 text-2xl font-semibold tracking-tight">
-        Recent Orders
-      </h4>
+      <h4 className="pb-10 scroll-m-20 text-2xl font-semibold tracking-tight">Recent Orders</h4>
       <Table className="text-sm">
         {caption && <TableCaption>{caption}</TableCaption>}
         <TableHeader>
@@ -57,7 +54,9 @@ export function InvoiceTable({ caption, data }: InvoiceTableProps) {
         </TableBody>
         <TableFooter>
           <TableRow>
-            <TableCell colSpan={5} className="px-2">Grand Total</TableCell>
+            <TableCell colSpan={5} className="px-2">
+              Grand Total
+            </TableCell>
             <TableCell className="px-2 text-right">PHP {grandTotal.toFixed(2)}</TableCell>
           </TableRow>
         </TableFooter>
@@ -65,4 +64,3 @@ export function InvoiceTable({ caption, data }: InvoiceTableProps) {
     </div>
   )
 }
-

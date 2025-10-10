@@ -1,71 +1,43 @@
 // Note(ryuu): color palette shud be defined in the tailwind css global
 // variable configs. for now, lets keep it this way.
 
-import { FC, ReactNode } from 'react'
+'use client'
+
 import { motion } from 'framer-motion'
 import { ArrowRight, Ban, Package, Flag } from 'lucide-react'
 
-interface StockLevelCardProps {
+interface CardProps {
   title: string
   description: string
   value: number
   type?: 'total' | 'low' | 'out'
 }
 
-const typeStyles: Record<NonNullable<StockLevelCardProps['type']>, string> = {
+const typeStyles = {
   total: 'bg-[#f9f06b] text-black border-black/20 dark:border-white/20',
   low: 'bg-[#a0a0a0] border-black/20 text-black dark:bg-[#0a0a0a] dark:text-white dark:border-white/20',
   out: 'bg-[#a0a0a0] border-black/20 text-black dark:bg-[#0a0a0a] dark:text-white dark:border-white/20',
-  
 }
 
-const typeIcons: Record<NonNullable<StockLevelCardProps['type']>, ReactNode> = {
+const typeIcons = {
   total: <Package className="w-8 h-8 text-black" />,
-  low: <Flag className="w-8 h-8 text-black dark:text-white " />,
+  low: <Flag className="w-8 h-8 text-black dark:text-white" />,
   out: <Ban className="w-8 h-8 text-black dark:text-white" />,
 }
 
-const StockLevelCard: FC<StockLevelCardProps> = ({ title, description, value, type = 'total' }) => { 
-  return (
-    <motion.div
-      whileHover={{ y: -5 }}
-      className={`rounded-md border shadow-sm p-6 flex flex-col justify-between transition-all duration-300 ${typeStyles[type]}`}
-    >
-      <div className="text-3xl mb-4">{typeIcons[type]}</div>
-      <div>
-        <h3 className={`text-xl font-bold mb-1`}>
-          {value}
-        </h3>
-        <h3 className="text-lg font-semibold mb-2">{title}</h3>
-        <p className="text-sm opacity-80 mb-4">{description}</p>
-      </div>
-      <button
-        className={`flex items-center gap-2 font-medium mt-auto`}
-      >
-        View details <ArrowRight size={16} />
-      </button>
-    </motion.div>
-  )
-}
-
-const TestStockLevelCard: FC = () => {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-      <StockLevelCard
-        title="Total Products"
-        type="total"
-        value={10}
-        description="All products currently in the database"
-      />
-      <StockLevelCard title="Low Stock" value={5} type="low" description="Currently low products" />
-      <StockLevelCard
-        title="Out of Stock Product"
-        type="out"
-        value={0}
-        description="Products that require re-stocking"
-      />
+export const Card = ({ title, description, value, type = 'total' }: CardProps) => (
+  <motion.div
+    whileHover={{ y: -5 }}
+    className={`rounded-md border shadow-sm p-6 flex flex-col justify-between transition-all duration-300 ${typeStyles[type]}`}
+  >
+    <div className="text-3xl mb-4">{typeIcons[type]}</div>
+    <div>
+      <h3 className="text-xl font-bold mb-1">{value}</h3>
+      <h3 className="text-lg font-semibold mb-2">{title}</h3>
+      <p className="text-sm opacity-80 mb-4">{description}</p>
     </div>
-  )
-}
-
-export default TestStockLevelCard
+    <button className="flex items-center gap-2 font-medium mt-auto">
+      View details <ArrowRight size={16} />
+    </button>
+  </motion.div>
+)

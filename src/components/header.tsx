@@ -9,9 +9,7 @@ export default function Header() {
   return (
     <React.Fragment>
       <div>
-        <div className="flex justify-between px-5">
-          
-        </div>
+        <div className="flex justify-between px-5"></div>
       </div>
       <Switch
         checked={theme === 'dark' ? true : false}
