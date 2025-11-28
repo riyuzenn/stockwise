@@ -6,8 +6,8 @@ import axios from 'axios'
 import { InvoiceTable } from '@/components/dashboard/recent-invoice-table'
 import { TopProductChart } from '@/components/dashboard/top-product'
 import LogoutButton from '@/components/ui/logout-button'
-import ThemeToggle from '@/components/dashboard/theme-toggle'
 import { Card } from '@/components/dashboard/card'
+import { useRouter } from 'next/navigation'
 
 const sampleData = [
   {
@@ -39,6 +39,8 @@ export default function OverviewPage() {
     low: 0,
     out: 0,
   })
+
+  const router = useRouter();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -74,14 +76,11 @@ export default function OverviewPage() {
             Keep tracks of all your products & sales.
           </p>
         </div>
-        <div>
-          <ThemeToggle />
-        </div>
       </div>
 
       <div className="w-full rounded-md bg-[#f9f06b] px-6 py-4 text-black shadow-md dark:bg-[#d9d05a]">
         <h1 className="scroll-m-20 text-2xl font-bold tracking-tight md:text-3xl truncate">
-          Daegu KoreanMart Indang
+          StockWise
         </h1>
         <p className="mt-2 text-black/70 md:mt-0 pt-2">Track. Manage. Grow.</p>
       </div>
@@ -92,22 +91,31 @@ export default function OverviewPage() {
         </h3>
 
         {/* Stock Level Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-4 gap-6">
           <Card
             title="Total Products"
             type="total"
+            onClick={() => {
+              router.push("/dashboard/product/")
+            }}
             value={data.total}
             description="All products currently in the database"
           />
           <Card
             title="Low Stock"
             type="low"
+            onClick={() => {
+              router.push("/dashboard/product?filter=low-stock")
+            }}
             value={data.low}
             description="Currently low stock products"
           />
           <Card
             title="Out of Stock"
             type="out"
+            onClick={() => {
+              router.push("/dashboard/product?filter=out-of-stock")
+            }}
             value={data.out}
             description="Products that require restocking"
           />

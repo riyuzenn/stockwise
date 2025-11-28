@@ -5,6 +5,7 @@ export interface IProduct extends Document {
   name: string
   price: number
   stock: number
+  expiry: Date
   createdAt: Date
 }
 
@@ -13,7 +14,9 @@ const ProductSchema = new Schema<IProduct>(
     productId: { type: String, required: true, unique: true },
     name: { type: String, required: true },
     price: { type: Number, required: true },
+    expiry: {type: Date, required: true},
     stock: { type: Number, required: true },
+    
   },
   { timestamps: true },
 )

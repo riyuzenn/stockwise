@@ -1,13 +1,13 @@
-'use client'
-{
-  /*
-import * as React from "react";
-import axios from "axios";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { toast } from "sonner";
-import { Plus } from "lucide-react";
+
+"use client"
+
+import React from "react"
+import axios from "axios"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { toast } from "sonner"
+import { Plus } from "lucide-react"
 
 import {
   Dialog,
@@ -17,29 +17,37 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from "@/components/ui/dialog"
 
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
+// ------------------------
+// ZOD schema
+// ------------------------
 const productSchema = z.object({
+  id: z.string().min(1, "Product ID is required"),
   name: z.string().min(1, "Product name is required"),
   price: z
     .string()
     .regex(/^\d+(\.\d{1,2})?$/, "Enter a valid price")
-    .transform((val) => Number(val)),
+    .transform((v) => Number(v)),
   stock: z
     .string()
     .regex(/^\d+$/, "Enter a valid quantity")
-    .transform((val) => Number(val)),
-});
+    .transform((v) => Number(v)),
+  expiry: z.string().min(1, "Expiry date is required"),
+})
 
-type ProductForm = z.infer<typeof productSchema>;
+type ProductForm = z.infer<typeof productSchema>
 
+// ------------------------
+// COMPONENT
+// ------------------------
 export function AddProductDialog() {
-  const [open, setOpen] = React.useState(false);
-  const [loading, setLoading] = React.useState(false);
+  const [open, setOpen] = React.useState(false)
+  const [loading, setLoading] = React.useState(false)
 
   const {
     register,
@@ -48,27 +56,36 @@ export function AddProductDialog() {
     formState: { errors },
   } = useForm<ProductForm>({
     resolver: zodResolver(productSchema),
-  });
+  })
 
   const onSubmit = async (data: ProductForm) => {
     try {
-      setLoading(true);
+      setLoading(true)
 
-      const res = await axios.post("/api/product", data);
-
-      if (res.data.success) {
-        toast.success("✅ Product added successfully!");
-        reset();
-        setOpen(false);
-      } else {
-        toast.error(res.data.message || "Failed to add product.");
+      const expiryDate = new Date(data.expiry)
+      if (isNaN(expiryDate.getTime())) {
+        toast.error("Invalid expiry date")
+        return
       }
-    } catch (err) {
-      toast.error("Something went wrong.");
+
+      const res = await axios.post("/api/product/add", {
+        ...data,
+        expiry: expiryDate.toISOString(),
+      })
+
+      if (res.status === 200 || res.status === 201) {
+        toast.success("Product added successfully!")
+        reset()
+        setOpen(false)
+      } else {
+        toast.error("Unexpected server response.")
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || "Something went wrong.")
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -81,19 +98,34 @@ export function AddProductDialog() {
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-[425px] bg-[#1c1c1c] border border-[#2a2a2a] text-white">
+      <DialogContent className="sm:max-w-[425px] bg-[#1b1b1b] border border-[#2a2a2a] text-white">
         <DialogHeader>
           <DialogTitle>Add Product</DialogTitle>
           <DialogDescription>Enter product details below.</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4 py-4">
+          {/* Product ID */}
+          <div className="grid gap-2">
+            <Label htmlFor="id">Product ID</Label>
+            <Input
+              id="id"
+              placeholder="e.g. PROD001"
+              className="bg-[#2b2b2b] border-none text-white"
+              {...register("id")}
+            />
+            {errors.id && (
+              <p className="text-red-400 text-sm">{errors.id.message}</p>
+            )}
+          </div>
+
+          {/* Product Name */}
           <div className="grid gap-2">
             <Label htmlFor="name">Product Name</Label>
             <Input
               id="name"
               placeholder="e.g. Ice Cream"
-              className="bg-[#2b2b2b] border-none"
+              className="bg-[#2b2b2b] border-none text-white"
               {...register("name")}
             />
             {errors.name && (
@@ -101,12 +133,13 @@ export function AddProductDialog() {
             )}
           </div>
 
+          {/* Price */}
           <div className="grid gap-2">
             <Label htmlFor="price">Price</Label>
             <Input
               id="price"
               placeholder="₱0.00"
-              className="bg-[#2b2b2b] border-none"
+              className="bg-[#2b2b2b] border-none text-white"
               {...register("price")}
             />
             {errors.price && (
@@ -114,16 +147,31 @@ export function AddProductDialog() {
             )}
           </div>
 
+          {/* Stock Quantity */}
           <div className="grid gap-2">
             <Label htmlFor="stock">Stock Quantity</Label>
             <Input
               id="stock"
               placeholder="0"
-              className="bg-[#2b2b2b] border-none"
+              className="bg-[#2b2b2b] border-none text-white"
               {...register("stock")}
             />
             {errors.stock && (
               <p className="text-red-400 text-sm">{errors.stock.message}</p>
+            )}
+          </div>
+
+          {/* Expiry Date */}
+          <div className="grid gap-2">
+            <Label htmlFor="expiry">Expiry Date</Label>
+            <Input
+              type="date"
+              id="expiry"
+              className="bg-[#2b2b2b] border-none text-white"
+              {...register("expiry")}
+            />
+            {errors.expiry && (
+              <p className="text-red-400 text-sm">{errors.expiry.message}</p>
             )}
           </div>
 
@@ -139,11 +187,11 @@ export function AddProductDialog() {
         </form>
       </DialogContent>
     </Dialog>
-  );
-}
-*/
+  )
 }
 
+
+/*
 import * as React from 'react'
 import axios from 'axios'
 import { z } from 'zod'
@@ -291,4 +339,4 @@ export function AddProductDialog() {
       </DialogContent>
     </Dialog>
   )
-}
+}*/

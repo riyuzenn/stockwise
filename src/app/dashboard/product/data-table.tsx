@@ -8,13 +8,17 @@ import {
   useReactTable,
 } from '@tanstack/react-table'
 
-export function DataTable<TData, TValue>({
-  columns,
-  data,
-}: {
+interface DataTableProps<TData, TValue = unknown> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
-}) {
+  rowClassName?: (row: TData) => string
+}
+
+export function DataTable<TData, TValue = unknown>({
+  columns,
+  data,
+  rowClassName,
+}: DataTableProps<TData, TValue>) {
   const table = useReactTable({
     data,
     columns,
@@ -36,15 +40,18 @@ export function DataTable<TData, TValue>({
           ))}
         </thead>
         <tbody>
-          {table.getRowModel().rows.map(row => (
-            <tr key={row.id} className="border-t">
-              {row.getVisibleCells().map(cell => (
-                <td key={cell.id} className="p-3 text-sm">
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </td>
-              ))}
-            </tr>
-          ))}
+          {table.getRowModel().rows.map(row => {
+            const extraClass = rowClassName ? rowClassName(row.original) : ''
+            return (
+              <tr key={row.id} className={`border-t ${extraClass}`}>
+                {row.getVisibleCells().map(cell => (
+                  <td key={cell.id} className="p-3 text-sm">
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
+                ))}
+              </tr>
+            )
+          })}
           {data.length === 0 && (
             <tr>
               <td colSpan={columns.length} className="text-center p-6 text-muted-foreground">
@@ -57,3 +64,4 @@ export function DataTable<TData, TValue>({
     </div>
   )
 }
+
