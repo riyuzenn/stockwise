@@ -1,4 +1,4 @@
-// Overview Page
+
 'use client'
 
 import React, { useState, useEffect } from 'react'
@@ -9,46 +9,41 @@ import LogoutButton from '@/components/ui/logout-button'
 import { Card } from '@/components/dashboard/card'
 import { useRouter } from 'next/navigation'
 
-const sampleData = [
-  {
-    refId: 'REF001',
-    productName: 'Product A',
-    price: 25,
-    qty: 2,
-    total: 50,
-  },
-  {
-    refId: 'REF002',
-    productName: 'Product B',
-    price: 300,
-    qty: 1,
-    total: 300,
-  },
-  {
-    refId: 'REF003',
-    productName: 'Product C',
-    price: 15,
-    qty: 5,
-    total: 75,
-  },
-]
+interface SaleItem {
+  refId: string
+  productName: string
+  price: number
+  qty: number
+  total: number
+}
+
+interface Sale {
+  refId: string
+  items: {
+    name: string
+    price: number
+    qty: number
+  }[]
+  subtotal: number
+  total: number
+  createdAt: string
+}
 
 export default function OverviewPage() {
-  const [data, setData] = useState({
-    total: 0,
-    low: 0,
-    out: 0,
-  })
+  const [data, setData] = useState({ total: 0, low: 0, out: 0 })
+  const [sales, setSales] = useState<SaleItem[]>([])
+  const [topProducts, setTopProducts] = useState<{ name: string; sales: number }[]>([])
 
-  const router = useRouter();
+  const router = useRouter()
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [allRes, lowRes, outRes] = await Promise.all([
+        const [allRes, lowRes, outRes, salesRes] = await Promise.all([
           axios.get('/api/product/get?filter=all'),
           axios.get('/api/product/get?filter=low-stock'),
           axios.get('/api/product/get?filter=out-of-stock'),
+          axios.get('/api/product/sales?limit=50'),
         ])
 
         setData({
@@ -56,8 +51,33 @@ export default function OverviewPage() {
           low: lowRes.data.count,
           out: outRes.data.count,
         })
+
+        const flattenedSales: SaleItem[] = []
+        const productSalesMap: Record<string, number> = {}
+
+        salesRes.data.data.forEach((sale: Sale) => {
+          sale.items.forEach((item) => {
+            flattenedSales.push({
+              refId: sale.refId,
+              productName: item.name,
+              price: item.price,
+              qty: item.qty,
+              total: item.price * item.qty,
+            })
+            productSalesMap[item.name] = (productSalesMap[item.name] || 0) + item.qty
+          })
+        })
+
+        setSales(flattenedSales)
+
+        const top = Object.entries(productSalesMap)
+          .map(([name, sales]) => ({ name, sales }))
+          .sort((a, b) => b.sales - a.sales)
+          .slice(0, 5)
+
+        setTopProducts(top)
       } catch (error) {
-        console.error('Error fetching stock data:', error)
+        console.error('Error fetching overview data:', error)
       }
     }
 
@@ -73,7 +93,7 @@ export default function OverviewPage() {
           </h1>
           <hr className="hidden h-9 w-[1px] border-none bg-gray-500 dark:bg-white/50 md:block" />
           <p className="mt-2 text-gray-500 dark:text-white/50 md:mt-0">
-            Keep tracks of all your products & sales.
+            Keep track of all your products & sales.
           </p>
         </div>
       </div>
@@ -90,32 +110,25 @@ export default function OverviewPage() {
           Stock Levels
         </h3>
 
-        {/* Stock Level Cards */}
         <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-4 gap-6">
           <Card
             title="Total Products"
             type="total"
-            onClick={() => {
-              router.push("/dashboard/product/")
-            }}
+            onClick={() => router.push('/dashboard/product/')}
             value={data.total}
             description="All products currently in the database"
           />
           <Card
             title="Low Stock"
             type="low"
-            onClick={() => {
-              router.push("/dashboard/product?filter=low-stock")
-            }}
+            onClick={() => router.push('/dashboard/product?filter=low-stock')}
             value={data.low}
             description="Currently low stock products"
           />
           <Card
             title="Out of Stock"
             type="out"
-            onClick={() => {
-              router.push("/dashboard/product?filter=out-of-stock")
-            }}
+            onClick={() => router.push('/dashboard/product?filter=out-of-stock')}
             value={data.out}
             description="Products that require restocking"
           />
@@ -127,19 +140,13 @@ export default function OverviewPage() {
           Top 5 Products
         </h3>
         <div className="flex flex-col gap-8 lg:flex-row">
-          <TopProductChart
-            products={[
-              { name: 'Product A Extra Long Name Example', sales: 320 },
-              { name: 'Product B', sales: 280 },
-              { name: 'Product C', sales: 210 },
-              { name: 'Product D', sales: 190 },
-              { name: 'Product E', sales: 120 },
-            ]}
-          />
-          <InvoiceTable caption="A list of recent ordered products." data={sampleData} />
+          <TopProductChart products={topProducts} />
+          <InvoiceTable caption="A list of recent ordered products." data={sales} />
         </div>
       </div>
+
       <LogoutButton />
     </div>
   )
 }
+

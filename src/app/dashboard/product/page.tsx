@@ -28,6 +28,7 @@ import { Card } from '@/components/dashboard/card'
 import { saveAs } from 'file-saver'
 import { DeleteConfirmationDialog } from "@/components/dashboard/delete-product"
 import { toast } from "sonner"
+import { number } from 'zod'
 
 interface Product {
   _id: string
@@ -39,10 +40,24 @@ interface Product {
   createdAt: string
 }
 
+interface IStats {
+  total: number
+  low: number
+  out: number
+  expired: number
+  soon: number
+}
+
 export default function ProductPage() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
-  const [stats, setStats] = useState({ total: 0, low: 0, out: 0 })
+  const [stats, setStats] = useState<IStats>({ 
+    total: 0, 
+    low: 0, 
+    out: 0,
+    expired: 0,
+    soon: 0
+  })
 
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
@@ -66,20 +81,26 @@ export default function ProductPage() {
   }
 
   const fetchStats = async () => {
-    try {
-      const [allRes, lowRes, outRes] = await Promise.all([
-        axios.get('/api/product/get?filter=all'),
-        axios.get('/api/product/get?filter=low-stock'),
-        axios.get('/api/product/get?filter=out-of-stock'),
-      ])
-      setStats({
-        total: allRes.data.count,
-        low: lowRes.data.count,
-        out: outRes.data.count,
-      })
-    } catch {}
-  }
+  try {
+    const [allRes, lowRes, outRes, expiredRes, soonRes] = await Promise.all([
+      axios.get('/api/product/get?filter=all'),
+      axios.get('/api/product/get?filter=low-stock'),
+      axios.get('/api/product/get?filter=out-of-stock'),
+      axios.get('/api/product/get?filter=expired'),
+      axios.get('/api/product/get?filter=expiring-soon'),
+    ]);
 
+    setStats({
+      total: allRes.data.count,
+      low: lowRes.data.count,
+      out: outRes.data.count,
+      expired: expiredRes.data.count,
+      soon: soonRes.data.count,
+    });
+  } catch (error) {
+    console.error(error);
+  }
+};
   useEffect(() => {
     fetchProducts()
     fetchStats()
@@ -253,19 +274,41 @@ export default function ProductPage() {
           title="Total Products"
           type="total"
           value={stats.total}
+          onClick={() => router.push("/dashboard/product")} 
           description="All products currently in the database"
+          showButton={false}
         />
         <Card
           title="Low Stock"
           type="low"
           value={stats.low}
+          onClick={() => router.push("/dashboard/product?filter=low-stock")}
           description="Currently low stock products"
+          showButton={false}
         />
         <Card
           title="Out of Stock"
           type="out"
+          onClick={() => router.push("/dashboard/product?filter=out-of-stock")}
           value={stats.out}
           description="Products that require restocking"
+          showButton={false}
+        />
+        <Card
+          title="Expired"
+          type="out"
+          onClick={() => router.push("/dashboard/product?filter=expired")}
+          value={stats.expired}
+          description="Products that already expired"
+          showButton={false}
+        />
+        <Card
+          title="Expiring Soon"
+          type="low"
+          value={stats.soon}
+          onClick={() => router.push("/dashboard/product?filter=expiring-soon")}
+          description="Products that soon expire"
+          showButton={false}
         />
       </div>
 
@@ -285,6 +328,8 @@ export default function ProductPage() {
               <SelectItem value="all">All Products</SelectItem>
               <SelectItem value="low-stock">Low Stock</SelectItem>
               <SelectItem value="out-of-stock">Out of Stock</SelectItem>
+              <SelectItem value="expired">Expired</SelectItem>
+              <SelectItem value="expiring-soon">Expiring Soon</SelectItem>
             </SelectContent>
           </Select>
           <Button variant="outline" onClick={exportCSV}>
