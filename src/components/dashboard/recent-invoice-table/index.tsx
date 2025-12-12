@@ -42,8 +42,8 @@ export function InvoiceTable({ caption, data }: InvoiceTableProps) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {data.map((row) => (
-            <TableRow key={row.refId}>
+          {data.map((row, i) => (
+            <TableRow key={i}>
               <TableCell className="px-2 font-medium">{row.refId}</TableCell>
               <TableCell className="px-2 truncate max-w-[150px]">{row.productName}</TableCell>
               <TableCell className="px-2 text-right">PHP {row.price.toFixed(2)}</TableCell>

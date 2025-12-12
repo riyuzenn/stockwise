@@ -1,7 +1,7 @@
 
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
+import React, { useEffect, useState, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ColumnDef } from '@tanstack/react-table'
 import { Button } from '@/components/ui/button'
@@ -73,6 +73,7 @@ export default function ProductPage() {
       const res = await fetch(`/api/product/get?filter=${filter}`)
       const json = await res.json()
       setProducts(json?.data ?? [])
+      console.log(`${res.url} ss: ${json?.data}`);
     } catch {
       setProducts([])
     } finally {
@@ -265,8 +266,18 @@ export default function ProductPage() {
     router.push(`/dashboard/product?${params.toString()}`)
   }
 
+  if (loading) {
+    return (
+      <React.Fragment>
+        <div className='min-h-[90vh] w-full flex justify-center items-center'>
+          <img src="/loader.gif" width={64} />
+        </div>
+      </React.Fragment>
+    )
+  }
+
   return (
-    <div className="flex flex-col gap-10 p-6 md:p-10">
+    <div className="w-full flex flex-col gap-8 px-6 py-8 min-h-[80vh] md:px-12 md:py-10 lg:px-16">
       <h1 className="text-3xl font-bold tracking-tight">Products</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-4 gap-6">

@@ -11,7 +11,7 @@ export interface ISale extends Document {
     qty: number
   }[]
   subtotal: number
-  tax: number
+
   total: number
   createdAt: Date
 }
@@ -28,7 +28,6 @@ const SaleSchema = new Schema<ISale>(
       },
     ],
     subtotal: { type: Number, required: true },
-    tax: { type: Number, required: true },
     total: { type: Number, required: true },
   },
   { timestamps: true }

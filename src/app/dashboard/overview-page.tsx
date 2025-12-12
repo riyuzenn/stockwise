@@ -33,17 +33,19 @@ export default function OverviewPage() {
   const [data, setData] = useState({ total: 0, low: 0, out: 0 })
   const [sales, setSales] = useState<SaleItem[]>([])
   const [topProducts, setTopProducts] = useState<{ name: string; sales: number }[]>([])
+  const [loading, setLoading] = useState(true);
 
   const router = useRouter()
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setLoading(true)
         const [allRes, lowRes, outRes, salesRes] = await Promise.all([
           axios.get('/api/product/get?filter=all'),
           axios.get('/api/product/get?filter=low-stock'),
           axios.get('/api/product/get?filter=out-of-stock'),
-          axios.get('/api/product/sales?limit=50'),
+          axios.get('/api/product/sales?limit=5'),
         ])
 
         setData({
@@ -68,7 +70,7 @@ export default function OverviewPage() {
           })
         })
 
-        setSales(flattenedSales)
+        setSales(flattenedSales.slice(0, 5))
 
         const top = Object.entries(productSalesMap)
           .map(([name, sales]) => ({ name, sales }))
@@ -78,11 +80,23 @@ export default function OverviewPage() {
         setTopProducts(top)
       } catch (error) {
         console.error('Error fetching overview data:', error)
+      } finally {
+        setLoading(false)
       }
     }
 
     fetchData()
   }, [])
+
+  if (loading) {
+      return (
+        <React.Fragment>
+          <div className='min-h-[90vh] w-full flex justify-center items-center'>
+            <img src="/loader.gif" width={64} />
+          </div>
+        </React.Fragment>
+      )
+    }
 
   return (
     <div className="w-full flex flex-col gap-12 px-6 py-8 min-h-[80vh] md:px-12 md:py-10 lg:px-16">
@@ -141,7 +155,7 @@ export default function OverviewPage() {
         </h3>
         <div className="flex flex-col gap-8 lg:flex-row">
           <TopProductChart products={topProducts} />
-          <InvoiceTable caption="A list of recent ordered products." data={sales} />
+          <InvoiceTable caption="A list of recent 5 ordered products." data={sales} />
         </div>
       </div>
 

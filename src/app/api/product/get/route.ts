@@ -1,7 +1,7 @@
-
 import { NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongoose'
 import { Product } from '@/models/product'
+import mongoose from 'mongoose'
 
 export async function GET(req: Request) {
   try {
@@ -9,47 +9,49 @@ export async function GET(req: Request) {
 
     const { searchParams } = new URL(req.url)
     const filter = searchParams.get('filter') || 'all'
+    const search = searchParams.get('search') || ''
+    const page = parseInt(searchParams.get('page') || '1', 10)
+    const limit = parseInt(searchParams.get('limit') || '10', 10)
+    const skip = (page - 1) * limit
+    
+    let query: any = {}
 
-    let products
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { productId: { $regex: search, $options: 'i' } } // search by productId string
+      ]
+    }
 
     switch (filter) {
       case 'low-stock':
-        products = await Product.find({ stock: { $gt: 0, $lte: 10 } }).sort({ createdAt: -1 })
+        query.stock = { $gt: 0, $lte: 10 }
         break
-
       case 'out-of-stock':
-        products = await Product.find({ stock: 0 }).sort({ createdAt: -1 })
+        query.stock = 0
         break
-
       case 'expired':
-        products = await Product.find({
-          expiry: { $lt: new Date() }
-        }).sort({ expiry: 1 })
+        query.expiry = { $lt: new Date() }
         break
-
       case 'expiring-soon':
         const now = new Date()
         const weekFromNow = new Date()
         weekFromNow.setDate(now.getDate() + 7)
-
-        products = await Product.find({
-          expiry: { $gte: now, $lte: weekFromNow }
-        }).sort({ expiry: 1 })
-        break
-
-      case 'all':
-      default:
-        products = await Product.find().sort({ createdAt: -1 })
+        query.expiry = { $gte: now, $lte: weekFromNow }
         break
     }
 
-    return NextResponse.json(
-      { success: true, filter, count: products.length, data: products },
-      { status: 200 },
-    )
+    const products = await Product.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean()
+
+    const count = await Product.countDocuments(query)
+
+    return NextResponse.json({ success: true, filter, count, data: products }, { status: 200 })
   } catch (error: any) {
     console.error('Error fetching products:', error)
     return NextResponse.json({ success: false, message: 'Internal server error' }, { status: 500 })
   }
 }
-
