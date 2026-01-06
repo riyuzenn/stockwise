@@ -14,7 +14,7 @@ export async function GET(req: Request) {
     const limit = parseInt(searchParams.get('limit') || '10', 10)
     const skip = (page - 1) * limit
     
-    let query: any = {}
+    const query: any = {}
 
     if (search) {
       query.$or = [

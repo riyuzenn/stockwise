@@ -5,9 +5,9 @@ import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 import { InvoiceTable } from '@/components/dashboard/recent-invoice-table'
 import { TopProductChart } from '@/components/dashboard/top-product'
-import LogoutButton from '@/components/ui/logout-button'
 import { Card } from '@/components/dashboard/card'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 
 interface SaleItem {
   refId: string
@@ -92,7 +92,7 @@ export default function OverviewPage() {
       return (
         <React.Fragment>
           <div className='min-h-[90vh] w-full flex justify-center items-center'>
-            <img src="/loader.gif" width={64} />
+            <Image unoptimized src="/loader.gif" height={64} width={64} alt="loader" />
           </div>
         </React.Fragment>
       )
@@ -159,7 +159,6 @@ export default function OverviewPage() {
         </div>
       </div>
 
-      <LogoutButton />
     </div>
   )
 }

@@ -44,8 +44,8 @@ export async function POST(req: Request) {
       name,
       price,
       stock,
-      
     })
+
     
     console.log(`New Product: ${newProduct}`)
     await newProduct.save()

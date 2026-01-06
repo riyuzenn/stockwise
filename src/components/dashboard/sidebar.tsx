@@ -27,6 +27,7 @@ import {
   FileDownIcon,
   Plus,
 } from 'lucide-react'
+import LogoutButton from '../ui/logout-button'
 
 const navItems = [
   { name: 'Overview', href: '/dashboard', icon: Home },
@@ -73,6 +74,11 @@ export function AppSidebar() {
                 <span className="text-lg">Settings</span>
               </Link>
             </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <div className="py-6">
+              <LogoutButton />
+            </div>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>

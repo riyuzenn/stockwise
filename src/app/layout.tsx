@@ -32,7 +32,8 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-          <PlasmaWrapper>{children}</PlasmaWrapper>
+          {/* <PlasmaWrapper>{children}</PlasmaWrapper> */}
+          {children}
           <Toaster richColors />
         </ThemeProvider>
       </body>

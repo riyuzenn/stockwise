@@ -1,7 +1,7 @@
 
 'use client'
 
-import React, { useEffect, useState, useMemo } from 'react'
+import React, { useEffect, useState, useMemo, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ColumnDef } from '@tanstack/react-table'
 import { Button } from '@/components/ui/button'
@@ -26,9 +26,11 @@ import { EditProductDialog } from '@/components/dashboard/edit-product'
 import axios from 'axios'
 import { Card } from '@/components/dashboard/card'
 import { saveAs } from 'file-saver'
-import { DeleteConfirmationDialog } from "@/components/dashboard/delete-product"
-import { toast } from "sonner"
-import { number } from 'zod'
+import { DeleteConfirmationDialog } from '@/components/dashboard/delete-product'
+import { toast } from 'sonner'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Checkbox } from '@/components/ui/checkbox'
+import Image from 'next/image'
 
 interface Product {
   _id: string
@@ -48,16 +50,91 @@ interface IStats {
   soon: number
 }
 
+interface Supplier {
+  _id: string
+  name: string
+  email: string
+}
+
+const ActionsCell: React.FC<{ product: Product; onUpdated: () => void }> = ({ product, onUpdated }) => {
+  const [editOpen, setEditOpen] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+
+  const handleDelete = async () => {
+    setDeleting(true)
+    try {
+      const res = await axios.post('/api/product/delete', { productId: product.productId })
+      if (res.data.success) {
+        toast.success(`Product ${product.productId} deleted`)
+        onUpdated()
+      } else {
+        toast.error(res.data.message || 'Failed to delete product')
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || err.message || 'Server error')
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={() => setEditOpen(true)}>Edit</DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem className="text-red-600" onClick={() => setDeleteOpen(true)}>
+            Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <EditProductDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        onUpdated={onUpdated}
+        productId={product.productId}
+        name={product.name}
+        price={product.price}
+        stock={product.stock}
+        expiry={product.expiry ? new Date(product.expiry).toISOString().split('T')[0] : ''}
+      />
+
+      <DeleteConfirmationDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        onConfirm={handleDelete}
+        title={`Delete Product?`}
+        description={`This will permanently delete ${product.name}. This action cannot be undone.`}
+      />
+    </>
+  )
+}
+
+
 export default function ProductPage() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
-  const [stats, setStats] = useState<IStats>({ 
-    total: 0, 
-    low: 0, 
+  const [lowStock, setLowStock] = useState<Product[]>([])
+  const [stats, setStats] = useState<IStats>({
+    total: 0,
+    low: 0,
     out: 0,
     expired: 0,
-    soon: 0
+    soon: 0,
   })
+
+  const [notifyOpen, setNotifyOpen] = useState(false)
+  const [suppliers, setSuppliers] = useState<Supplier[]>([])
+  const [selectedSuppliers, setSelectedSuppliers] = useState<string[]>([])
+  const [notifying, setNotifying] = useState(false)
 
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
@@ -67,45 +144,133 @@ export default function ProductPage() {
   const filter = searchParams?.get('filter') || 'all'
   const search = searchParams?.get('search') || ''
 
-  const fetchProducts = async () => {
+
+  useEffect(() => {
+    axios.post("/api/cron")
+  }, [])
+
+  const fetchSuppliers = async () => {
+    try {
+      const res = await axios.get('/api/supplier')
+      setSuppliers(res.data.data || [])
+    } catch {
+      toast.error('Failed to load suppliers')
+    }
+  }
+  
+
+  // State to track selected low-stock products
+const [selectedProducts, setSelectedProducts] = useState<Product[]>([])
+
+// Function to notify selected products
+const notifySelectedProducts = async () => {
+  if (selectedSuppliers.length === 0) {
+    toast.error('Select at least one supplier')
+    return
+  }
+  if (selectedProducts.length === 0) {
+    toast.error('Select at least one product')
+    return
+  }
+
+  setNotifying(true)
+  try {
+    const payload = selectedProducts.map((p) => ({
+      product: { productId: p.productId, name: p.name, stock: p.stock },
+      emails: selectedSuppliers,
+    }))
+    await axios.post('/api/stock/notify', { payload })
+    toast.success('Suppliers notified successfully')
+    setNotifyOpen(false)
+    setSelectedSuppliers([])
+    setSelectedProducts([])
+  } catch {
+    toast.error('Failed to notify suppliers')
+  } finally {
+    setNotifying(false)
+  }
+}
+
+
+  useEffect(() => {
+    fetchSuppliers()
+  }, [])
+
+  const notifier = async () => {
+    if (selectedSuppliers.length === 0) {
+      toast.error('Select at least one supplier')
+      return
+    }
+
+    setNotifying(true)
+    try {
+      await axios.post('/api/stock/notify', {
+        emails: selectedSuppliers,
+        products: lowStock,
+      })
+      toast.success('Supplier notified successfully')
+      setNotifyOpen(false)
+      setSelectedSuppliers([])
+    } catch {
+      toast.error('Failed to notify supplier')
+    } finally {
+      setNotifying(false)
+    }
+  }
+
+  const fetchLowStock = async () => {
+    try {
+      const res = await axios.get('/api/stock/low')
+      setLowStock(res.data.data || [])
+    } catch {
+      setLowStock([])
+    }
+  }
+
+  useEffect(() => {
+    fetchLowStock()
+  }, [])
+
+  const fetchProducts = useCallback(async () => {
     setLoading(true)
     try {
       const res = await fetch(`/api/product/get?filter=${filter}`)
       const json = await res.json()
       setProducts(json?.data ?? [])
-      console.log(`${res.url} ss: ${json?.data}`);
     } catch {
       setProducts([])
     } finally {
       setLoading(false)
     }
-  }
+  }, [filter])
+  
+  const fetchStats = useCallback(async () => {
+    try {
+      const [allRes, lowRes, outRes, expiredRes, soonRes] = await Promise.all([
+        axios.get('/api/product/get?filter=all'),
+        axios.get('/api/product/get?filter=low-stock'),
+        axios.get('/api/product/get?filter=out-of-stock'),
+        axios.get('/api/product/get?filter=expired'),
+        axios.get('/api/product/get?filter=expiring-soon'),
+      ])
 
-  const fetchStats = async () => {
-  try {
-    const [allRes, lowRes, outRes, expiredRes, soonRes] = await Promise.all([
-      axios.get('/api/product/get?filter=all'),
-      axios.get('/api/product/get?filter=low-stock'),
-      axios.get('/api/product/get?filter=out-of-stock'),
-      axios.get('/api/product/get?filter=expired'),
-      axios.get('/api/product/get?filter=expiring-soon'),
-    ]);
+      setStats({
+        total: allRes.data.count,
+        low: lowRes.data.count,
+        out: outRes.data.count,
+        expired: expiredRes.data.count,
+        soon: soonRes.data.count,
+      })
+    } catch (error) {
+      console.error(error)
+    }
+  }, [])
 
-    setStats({
-      total: allRes.data.count,
-      low: lowRes.data.count,
-      out: outRes.data.count,
-      expired: expiredRes.data.count,
-      soon: soonRes.data.count,
-    });
-  } catch (error) {
-    console.error(error);
-  }
-};
+
   useEffect(() => {
     fetchProducts()
     fetchStats()
-  }, [filter])
+  }, [fetchProducts, fetchStats])
 
   const handleUpdated = () => {
     fetchProducts()
@@ -116,11 +281,11 @@ export default function ProductPage() {
     if (!search) return products
     const s = search.toLowerCase()
     return products.filter(
-      (p) =>
-        p.name.toLowerCase().includes(s) ||
-        p.productId.toLowerCase().includes(s)
+      (p) => p.name.toLowerCase().includes(s) || p.productId.toLowerCase().includes(s)
     )
   }, [products, search])
+
+  
 
   const paginatedProducts = useMemo(() => {
     const start = (page - 1) * pageSize
@@ -138,8 +303,7 @@ export default function ProductPage() {
       p.expiry,
       p.createdAt,
     ])
-    const csvContent =
-      [headers, ...rows].map((e) => e.join(',')).join('\n')
+    const csvContent = [headers, ...rows].map((e) => e.join(',')).join('\n')
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
     saveAs(blob, 'products.csv')
   }
@@ -158,11 +322,7 @@ export default function ProductPage() {
       cell: ({ row }) => {
         const stock = row.original.stock
         const cls =
-          stock === 0
-            ? 'text-red-600'
-            : stock <= 10
-            ? 'text-yellow-600'
-            : 'text-green-600'
+          stock === 0 ? 'text-red-600' : stock <= 10 ? 'text-yellow-600' : 'text-green-600'
         return <span className={cls}>{stock}</span>
       },
     },
@@ -186,72 +346,12 @@ export default function ProductPage() {
           day: 'numeric',
         }),
     },
-   {
-  id: 'actions',
-  header: '',
-  cell: ({ row }) => {
-    const product = row.original
-    const [editOpen, setEditOpen] = useState(false)
-    const [deleteOpen, setDeleteOpen] = useState(false)
-    const [deleting, setDeleting] = useState(false)
-
-    const handleDelete = async () => {
-      setDeleting(true)
-      try {
-        const res = await axios.post('/api/product/delete', { productId: product.productId })
-        if (res.data.success) {
-          toast.success(`Product ${product.productId} deleted`)
-          handleUpdated()
-        } else {
-          toast.error(res.data.message || 'Failed to delete product')
-        }
-      } catch (err: any) {
-        toast.error(err.response?.data?.error || err.message || 'Server error')
-      } finally {
-        setDeleting(false)
-      }
+    {
+      id: 'actions',
+      header: '',
+      cell: ({ row }) => <ActionsCell product={row.original} onUpdated={handleUpdated} />,
     }
-
-    return (
-      <>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => setEditOpen(true)}>Edit</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-red-600" onClick={() => setDeleteOpen(true)}>
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        <EditProductDialog
-          open={editOpen}
-          onOpenChange={setEditOpen}
-          onUpdated={handleUpdated}
-          productId={product.productId}
-          name={product.name}
-          price={product.price}
-          stock={product.stock}
-          expiry={product.expiry ? new Date(product.expiry).toISOString().split('T')[0] : ''}
-        />
-
-        <DeleteConfirmationDialog
-          open={deleteOpen}
-          onOpenChange={setDeleteOpen}
-          onConfirm={handleDelete}
-          title={`Delete Product?`}
-          description={`This will permanently delete ${product.name}. This action cannot be undone.`}
-        />
-      </>
-    )
-  },
-}  ]
+  ]
 
   const handleFilterChange = (value: string) => {
     const params = new URLSearchParams(searchParams?.toString() ?? '')
@@ -268,11 +368,9 @@ export default function ProductPage() {
 
   if (loading) {
     return (
-      <React.Fragment>
-        <div className='min-h-[90vh] w-full flex justify-center items-center'>
-          <img src="/loader.gif" width={64} />
-        </div>
-      </React.Fragment>
+      <div className="min-h-[90vh] w-full flex justify-center items-center">
+        <Image unoptimized src="/loader.gif" height={64} width={64} alt="loader" />
+      </div>
     )
   }
 
@@ -285,7 +383,7 @@ export default function ProductPage() {
           title="Total Products"
           type="total"
           value={stats.total}
-          onClick={() => router.push("/dashboard/product")} 
+          onClick={() => router.push('/dashboard/product')}
           description="All products currently in the database"
           showButton={false}
         />
@@ -293,23 +391,23 @@ export default function ProductPage() {
           title="Low Stock"
           type="low"
           value={stats.low}
-          onClick={() => router.push("/dashboard/product?filter=low-stock")}
+          onClick={() => router.push('/dashboard/product?filter=low-stock')}
           description="Currently low stock products"
           showButton={false}
         />
         <Card
           title="Out of Stock"
           type="out"
-          onClick={() => router.push("/dashboard/product?filter=out-of-stock")}
           value={stats.out}
+          onClick={() => router.push('/dashboard/product?filter=out-of-stock')}
           description="Products that require restocking"
           showButton={false}
         />
         <Card
           title="Expired"
           type="out"
-          onClick={() => router.push("/dashboard/product?filter=expired")}
           value={stats.expired}
+          onClick={() => router.push('/dashboard/product?filter=expired')}
           description="Products that already expired"
           showButton={false}
         />
@@ -317,11 +415,46 @@ export default function ProductPage() {
           title="Expiring Soon"
           type="low"
           value={stats.soon}
-          onClick={() => router.push("/dashboard/product?filter=expiring-soon")}
+          onClick={() => router.push('/dashboard/product?filter=expiring-soon')}
           description="Products that soon expire"
           showButton={false}
         />
       </div>
+
+      {lowStock.length > 0 && (
+  <div className="rounded-xl border bg-amber-50 text-amber-900 dark:bg-amber-950 dark:text-amber-200 border-amber-200 dark:border-amber-800 p-5 shadow-sm">
+    <h3 className="text-lg font-semibold mb-2">⚠️ Low Stock Items</h3>
+
+    <div className="space-y-2 max-h-[300px] overflow-auto">
+      {lowStock.map((p) => (
+        <label key={p._id} className="flex items-center gap-3 rounded-md border p-3 cursor-pointer">
+          <Checkbox
+            checked={selectedProducts.some(sp => sp._id === p._id)}
+            onCheckedChange={(checked) => {
+              setSelectedProducts((prev) =>
+                checked ? [...prev, p] : prev.filter(sp => sp._id !== p._id)
+              )
+            }}
+          />
+          <div>
+            <p className="font-medium">{p.name}</p>
+            <p className="text-sm text-muted-foreground">Stock: {p.stock}</p>
+          </div>
+        </label>
+      ))}
+    </div>
+
+    <Button
+      className="mt-4"
+      variant="destructive"
+      onClick={() => setNotifyOpen(true)}
+      disabled={selectedProducts.length === 0}
+    >
+      Notify Supplier
+    </Button>
+  </div>
+)}
+
 
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <Input
@@ -351,9 +484,7 @@ export default function ProductPage() {
 
       <div className="rounded-lg border bg-card p-4 shadow-sm">
         {loading ? (
-          <div className="p-6 text-center text-sm text-muted-foreground">
-            Loading products...
-          </div>
+          <div className="p-6 text-center text-sm text-muted-foreground">Loading products...</div>
         ) : (
           <DataTable
             columns={columns}
@@ -392,232 +523,52 @@ export default function ProductPage() {
           </Select>
         </div>
       </div>
-    </div>
-  )
-}
 
-/*
-'use client'
+      <Dialog open={notifyOpen} onOpenChange={setNotifyOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Select suppliers to notify</DialogTitle>
+          </DialogHeader>
 
-import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { MoreHorizontal } from 'lucide-react'
-
-
-import { useEffect, useState, useMemo } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { ColumnDef } from '@tanstack/react-table'
-import { DataTable } from './data-table'
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from '@/components/ui/select'
-import { Input } from '@/components/ui/input'
-import { EditProductDialog } from '@/components/dashboard/edit-product'
-
-
-interface Product {
-  _id: string
-  productId: string
-  name: string
-  price: number
-  stock: number
-  expiry: string
-  createdAt: string
-}
-
-
-export default function ProductPage() {
-  const [products, setProducts] = useState<Product[]>([])
-  const [loading, setLoading] = useState(true)
-
-  const router = useRouter()
-  const searchParams = useSearchParams()
-
-  const filter = searchParams?.get('filter') || 'all'
-  const search = searchParams?.get('search') || ''
-  
-
-  
-
-const columns: ColumnDef<Product>[] = [
-  { accessorKey: "productId", header: "Product ID" },
-  { accessorKey: "name", header: "Name" },
-  {
-    accessorKey: "price",
-    header: "Price",
-    cell: ({ row }) => `₱${row.original.price.toFixed(2)}`,
-  },
-  {
-    accessorKey: "stock",
-    header: "Stock",
-    cell: ({ row }) => {
-      const stock = row.original.stock
-      const cls =
-        stock === 0 ? "text-red-600" : stock <= 10 ? "text-yellow-600" : "text-green-600"
-      return <span className={cls}>{stock}</span>
-    },
-  },
-  
-{
-  accessorKey: "expiry",
-  header: "Expiration Date",
-  cell: ({ row }) => {
-    const dt = new Date(row.original.expiry)
-    return dt.toLocaleDateString(undefined, {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    })
-  },
-},
-  {
-    accessorKey: "createdAt",
-    header: "Created At",
-    cell: ({ row }) =>
-      new Date(row.original.createdAt).toLocaleDateString(undefined, {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      }),
-  }, 
-  {
-  id: "actions",
-  header: "",
-  cell: ({ row }) => {
-    const product = row.original
-  
-    return (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="h-8 w-8 p-0">
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-
-        <DropdownMenuContent align="end">
-          <EditProductDialog
-      productId={row.original.productId}
-      name={row.original.name}
-      price={row.original.price}
-      stock={row.original.stock}
-      expiry={row.original.expiry ? new Date(row.original.expiry).toISOString().split('T')[0] : ''}
-      onUpdated={() => {
-      
-      }}
-    />
-
-          <DropdownMenuSeparator />
-
-          <DropdownMenuItem
-            onClick={
-              () => alert(`Deleting: ${product.productId}`)
-            }
-            className="text-red-600"
-          >
-            Delete
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    )
-  },
-}
-]
-
-
-
-  useEffect(() => {
-    if (!['all', 'low-stock', 'out-of-stock'].includes(filter)) {
-      //setError('Invalid filter. Must be one of: all, low-stock, out-of-stock')
-      setLoading(false)
-      return
-    }
-    const fetchProducts = async () => {
-      setLoading(true)
-      try {
-        const res = await fetch(`/api/product/get?filter=${filter}`)
-        const json = await res.json()
-        console.log(json)
-        setProducts(json?.data ?? [])
-      } catch (err) {
-        console.error('Failed to fetch products:', err)
-        setProducts([])
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchProducts()
-  }, [filter])
-
-  
-
-  const handleFilterChange = (value: string) => {
-    const params = new URLSearchParams(searchParams?.toString() ?? '')
-    params.set('filter', value)
-    router.push(`/dashboard/product?${params.toString()}`)
-  }
-
-  const handleSearchChange = (value: string) => {
-    const params = new URLSearchParams(searchParams?.toString() ?? '')
-    if (value) params.set('search', value)
-    else params.delete('search')
-    router.push(`/dashboard/product?${params.toString()}`)
-  }
-
-  const filteredProducts = useMemo(() => {
-    if (!search) return products
-    const s = search.toLowerCase()
-    return products.filter(
-      (p) =>
-        p.name.toLowerCase().includes(s) ||
-        p.productId.toLowerCase().includes(s)
-    )
-  }, [products, search])
-
-  return (
-    <div className="flex flex-col gap-6 p-6 md:p-10">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <h1 className="text-3xl font-bold tracking-tight">Products</h1>
-        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-          <Input
-            placeholder="Search product..."
-            defaultValue={search}
-            onChange={(e) => handleSearchChange(e.target.value)}
-            className="sm:w-[250px]"
-          />
-          <Select value={filter} onValueChange={handleFilterChange}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Filter products" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Products</SelectItem>
-              <SelectItem value="low-stock">Low Stock</SelectItem>
-              <SelectItem value="out-of-stock">Out of Stock</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      <div className="rounded-lg border bg-card p-4 shadow-sm">
-        {loading ? (
-          <div className="p-6 text-center text-sm text-muted-foreground">
-            Loading products...
+          <div className="space-y-3 max-h-[300px] overflow-auto">
+            {suppliers.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No suppliers found. Add suppliers in Settings.
+              </p>
+            ) : (
+              suppliers.map((s) => (
+                <label
+                  key={s._id}
+                  className="flex items-center gap-3 rounded-md border p-3 cursor-pointer"
+                >
+                  <Checkbox
+                    checked={selectedSuppliers.includes(s.email)}
+                    onCheckedChange={(checked) => {
+                      setSelectedSuppliers((prev) =>
+                        checked ? [...prev, s.email] : prev.filter((e) => e !== s.email)
+                      )
+                    }}
+                  />
+                  <div>
+                    <p className="font-medium">{s.name}</p>
+                    <p className="text-sm text-muted-foreground">{s.email}</p>
+                  </div>
+                </label>
+              ))
+            )}
           </div>
-        ) : (
-          <DataTable columns={columns} data={filteredProducts} />
-        )}
-      </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setNotifyOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={notifySelectedProducts} disabled={notifying}>
+  {notifying ? 'Sending…' : 'Notify Supplier'}
+</Button>
+
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
-*/

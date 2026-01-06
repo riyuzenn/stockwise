@@ -3,12 +3,14 @@ import { NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongoose'
 import { User } from '@/models/user'
 import { verifyToken } from '@/lib/jwt'
+import { cookies } from 'next/headers'
 
 export async function GET(req: Request) {
   try {
     await connectDB()
-    const token = req.cookies.get('session')?.value
-
+    const cookieStore = await cookies()
+    const token = cookieStore.get('session')?.value
+ 
     if (!token) {
       return NextResponse.json({ user: null }, { status: 401 })
     }

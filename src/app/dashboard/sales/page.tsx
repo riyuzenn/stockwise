@@ -63,6 +63,12 @@ export default function POSPage() {
     }
   }
 
+  const isExpired = (expiry: string) => {
+    if (!expiry) return false
+    return new Date(expiry).getTime() < new Date().setHours(0, 0, 0, 0)
+  }
+
+
   const updateQty = (id: string, qty: number) => {
     if (qty <= 0) {
       setCart(cart.filter((i) => i._id !== id))
@@ -121,9 +127,13 @@ export default function POSPage() {
                       <Button
                         className="w-full mt-2"
                         onClick={() => addToCart(item)}
-                        disabled={item.stock === 0}
+                        disabled={item.stock === 0 || isExpired(item.expiry)}
                       >
-                        {item.stock === 0 ? 'Out of Stock' : 'Add'}
+                        {isExpired(item.expiry)
+                          ? 'Expired'
+                          : item.stock === 0
+                          ? 'Out of Stock'
+                          : 'Add'}
                       </Button>
                     </CardContent>
                   </Card>
