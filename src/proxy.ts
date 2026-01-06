@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { verifyToken } from "@/lib/jwt";
 import { cookies } from 'next/headers'
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
 
   const cookieStore = await cookies()
   const token = cookieStore.get("session")?.value;
