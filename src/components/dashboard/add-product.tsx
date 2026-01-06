@@ -22,11 +22,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
-/* ----------------------------------------
-   ZOD SCHEMAS
----------------------------------------- */
 
-// 1️⃣ Raw form inputs (ALL strings)
 const productFormSchema = z.object({
   id: z.string().min(1, "Product ID is required"),
   name: z.string().min(1, "Product name is required"),
@@ -35,7 +31,7 @@ const productFormSchema = z.object({
   expiry: z.string().min(1, "Expiry date is required"),
 })
 
-// 2️⃣ Parsed schema (numbers)
+
 const parsedProductSchema = productFormSchema.transform((data) => ({
   ...data,
   price: Number(data.price),
@@ -45,9 +41,7 @@ const parsedProductSchema = productFormSchema.transform((data) => ({
 type ProductFormInput = z.infer<typeof productFormSchema>
 type ProductFormParsed = z.infer<typeof parsedProductSchema>
 
-/* ----------------------------------------
-   COMPONENT
----------------------------------------- */
+
 
 export function AddProductDialog() {
   const [open, setOpen] = React.useState(false)
