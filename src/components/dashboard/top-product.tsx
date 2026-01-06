@@ -30,7 +30,7 @@ export function TopProductChart({ products }: TopProductChartProps) {
     <Card className="md:w-1/2">
       <CardHeader>
         <CardTitle>Top 5 Products</CardTitle>
-        <CardDescription>Based on sales</CardDescription>
+        <CardDescription>Based on sales from the <b>recent orders</b></CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer
@@ -70,11 +70,8 @@ export function TopProductChart({ products }: TopProductChartProps) {
           </BarChart>
         </ChartContainer>
       </CardContent>
-      <CardFooter className="flex-col items-start gap-2 text-sm">
-        <div className="flex gap-2 leading-none font-medium">
-          Trending this month <TrendingUp className="h-4 w-4" />
-        </div>
-        <div className="text-muted-foreground leading-none">Showing top-selling products</div>
+      <CardFooter className="flex-col items-start gap-2 text-sm">      
+        <div className="text-muted-foreground leading-none">Showing the graph of top selling products based on <b>recent orders.</b></div>
       </CardFooter>
     </Card>
   )
