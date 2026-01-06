@@ -489,27 +489,24 @@ const notifySelectedProducts = async () => {
         </div>
       </div>
 
-      <div className="rounded-lg border bg-card p-4 shadow-sm">
+      <div className="rounded-lg border bg-card p-4 shadow-sm overflow-x-auto">
         {loading ? (
-          <div className="p-6 text-center text-sm text-muted-foreground">Loading products...</div>
+            <div className="p-6 text-center text-sm text-muted-foreground">Loading products...</div>
         ) : (
-          <DataTable
-            columns={columns}
-            data={paginatedProducts}
-            rowClassName={(row: Product) => {
-              if (new Date(row.expiry) < new Date()) {
-                return 'bg-red-100 dark:bg-red-900/50'
-              }
-
-              if (isExpiringSoon(row.expiry)) {
-                return 'bg-yellow-100 dark:bg-yellow-900/40'
-              }
-
-              return ''
-            }}
-          />
+            <div className="min-w-[800px]">
+            <DataTable
+                columns={columns}
+                data={paginatedProducts}
+                rowClassName={(row: Product) => {
+                if (new Date(row.expiry) < new Date()) return 'bg-red-100 dark:bg-red-900/50'
+                if (isExpiringSoon(row.expiry)) return 'bg-yellow-100 dark:bg-yellow-900/40'
+                return ''
+                }}
+            />
+            </div>
         )}
-      </div>
+        </div>
+
 
       <div className="flex justify-between items-center mt-4">
         <div>
