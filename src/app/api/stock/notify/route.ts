@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { connectDB } from "@/lib/mongoose"
 import nodemailer from "nodemailer"
+import { requireAuth } from "@/lib/auth"
 
 interface NotifyItem {
   product: {
@@ -12,6 +13,14 @@ interface NotifyItem {
 }
 
 export async function POST(req: Request) {
+  const user = await requireAuth();
+      
+      if (!user) {
+        return NextResponse.json(
+          { message: 'Unauthorized' },
+          { status: 401 }
+        )
+      }
   try {
     const { payload }: { payload: NotifyItem[] } = await req.json()
 

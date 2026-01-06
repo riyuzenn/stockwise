@@ -2,8 +2,17 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongoose";
 import { Product } from "@/models/product";
+import { requireAuth } from "@/lib/auth";
 
 export async function POST(req: Request) {
+  const user = await requireAuth();
+      
+      if (!user) {
+        return NextResponse.json(
+          { message: 'Unauthorized' },
+          { status: 401 }
+        )
+      }
   try {
     await connectDB();
 

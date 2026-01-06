@@ -1,24 +1,25 @@
-
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import jwt from "jsonwebtoken";
+import { verifyToken } from "@/lib/jwt";
+import { cookies } from 'next/headers'
 
 export async function middleware(req: NextRequest) {
-  console.log("Hello world middleware")
-  const token = req.cookies.get("session")?.value;
+
+  const cookieStore = await cookies()
+  const token = cookieStore.get("session")?.value;
 
   const url = req.nextUrl.clone();
 
   if (!token) {
-    url.pathname = "/auth/login";
+    url.pathname = "/";
     return NextResponse.redirect(url);
   }
 
   try {
-    jwt.verify(token, process.env.JWT_SECRET!);
+    verifyToken(token);
     return NextResponse.next();
   } catch {
-    url.pathname = "/auth/login";
+    url.pathname = "/";
     return NextResponse.redirect(url);
   }
 }
@@ -26,4 +27,3 @@ export async function middleware(req: NextRequest) {
 export const config = {
   matcher: ["/dashboard/:path*"],
 };
-

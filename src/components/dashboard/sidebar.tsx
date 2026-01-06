@@ -3,7 +3,7 @@
 
 import React from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import { Button } from '../ui/button'
 import { AddProductDialog } from './add-product'
 import {
@@ -87,6 +87,23 @@ export function AppSidebar() {
 }
 
 export function RightSideBar() {
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+
+  const exportCSV = async () => {
+    if (!pathname.startsWith('/dashboard/product')) return
+
+    const filter = searchParams.get('filter') || 'all'
+    const res = await fetch(`/api/product/export?filter=${filter}`)
+    const blob = await res.blob()
+
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'products.csv'
+    a.click()
+    URL.revokeObjectURL(url)
+  }
   return (
     <div className="border-l border-black/10 dark:border-white/10 flex bg-[#fafafa] dark:bg-[#171717] md:flex-col md:w-40 md:px-4 md:sticky md:top-0 md:h-screen flex-row w-full px-6 py-4 sticky bottom-0 items-center justify-center gap-10 z-50">
       <div className="flex flex-col items-center gap-3">
@@ -94,12 +111,12 @@ export function RightSideBar() {
         <p className="text-sm md:text-md">Add Product</p>
       </div>
 
-      <div className="flex flex-col items-center gap-3">
+      {/* <div className="flex flex-col items-center gap-3">
         <Button variant="secondary" className="size-16 rounded-full">
           <FileDownIcon className="size-6 text-black dark:text-[#dadada]" />
         </Button>
         <p className="text-sm md:text-md">Export CSV</p>
-      </div>
+      </div> */}
     </div>
   )
 }

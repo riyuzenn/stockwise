@@ -1,10 +1,19 @@
 import { NextResponse } from "next/server"
 import { connectDB } from "@/lib/mongoose"
 import { Product } from "@/models/product"
+import { requireAuth } from "@/lib/auth"
 
 const LOW_STOCK_THRESHOLD = 10
 
 export async function GET() {
+  const user = await requireAuth();
+      
+      if (!user) {
+        return NextResponse.json(
+          { message: 'Unauthorized' },
+          { status: 401 }
+        )
+      }
   try {
     await connectDB()
 

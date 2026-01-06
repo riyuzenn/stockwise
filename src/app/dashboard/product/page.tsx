@@ -40,6 +40,7 @@ interface Product {
   stock: number
   expiry: string
   createdAt: string
+  autoDiscounted: boolean
 }
 
 interface IStats {
@@ -105,6 +106,7 @@ const ActionsCell: React.FC<{ product: Product; onUpdated: () => void }> = ({ pr
         price={product.price}
         stock={product.stock}
         expiry={product.expiry ? new Date(product.expiry).toISOString().split('T')[0] : ''}
+        autoDiscounted={product.autoDiscounted}
       />
 
       <DeleteConfirmationDialog
@@ -143,6 +145,14 @@ export default function ProductPage() {
   const searchParams = useSearchParams()
   const filter = searchParams?.get('filter') || 'all'
   const search = searchParams?.get('search') || ''
+
+
+  const isExpiringSoon = (expiry: string, days = 7) => {
+    const now = new Date()
+    const exp = new Date(expiry)
+    const diffDays = (exp.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+    return diffDays >= 0 && diffDays <= days
+  }
 
 
   useEffect(() => {
@@ -489,9 +499,17 @@ const notifySelectedProducts = async () => {
           <DataTable
             columns={columns}
             data={paginatedProducts}
-            rowClassName={(row: Product) =>
-              new Date(row.expiry) < new Date() ? 'bg-red-50 dark:bg-red-900/50' : ''
-            }
+            rowClassName={(row: Product) => {
+              if (new Date(row.expiry) < new Date()) {
+                return 'bg-red-100 dark:bg-red-900/50'
+              }
+
+              if (isExpiringSoon(row.expiry)) {
+                return 'bg-yellow-100 dark:bg-yellow-900/40'
+              }
+
+              return ''
+            }}
           />
         )}
       </div>

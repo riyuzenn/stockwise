@@ -1,12 +1,15 @@
 
 'use client'
 
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { SidebarProvider, SidebarTrigger, SidebarInset } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/components/dashboard/sidebar'
+import { useEffect } from 'react'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+  const router = useRouter()
+
 
   const pageTitles: Record<string, string> = {
     '/dashboard': 'Overview',
@@ -15,6 +18,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   const pageTitle = pageTitles[pathname] || 'Dashboard'
+
+  
+
+  
 
   return (
     <SidebarProvider>

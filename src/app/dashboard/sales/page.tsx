@@ -119,13 +119,13 @@ export default function POSPage() {
             <>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 xl:grid-cols-4 gap-4">
                 {products.map((item) => (
-                  <Card key={item._id} className="bg-neutral-800 border-neutral-700 hover:bg-neutral-700 transition">
+                  <Card key={item._id} className="dark:bg-neutral-800 dark:border-neutral-700 hover:bg-neutral-400 hover:cursor-pointer dark:hover:bg-neutral-700 transition">
                     <CardContent className="p-4 space-y-2">
-                      <p className="text-sm text-neutral-400">{item.stock} left</p>
+                      <p className="text-sm dark:text-neutral-400">{item.stock} left</p>
                       <p className="font-medium">{item.name}</p>
-                      <p className="text-neutral-400 text-sm">₱{item.price.toFixed(2)}</p>
+                      <p className="dark:text-neutral-400 text-sm">₱{item.price.toFixed(2)}</p>
                       <Button
-                        className="w-full mt-2"
+                        className="w-full mt-2 hover:cursor-pointer"
                         onClick={() => addToCart(item)}
                         disabled={item.stock === 0 || isExpired(item.expiry)}
                       >
@@ -164,17 +164,17 @@ export default function POSPage() {
 
         {/* Right: Order Summary */}
         <div className="col-span-12 lg:col-span-4">
-          <Card className="bg-neutral-900 border-neutral-700">
+          <Card className="dark:bg-neutral-900 dark:border-neutral-700">
             <CardHeader>
               <CardTitle className="text-xl">Order Summary</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {cart.length === 0 && <p className="text-neutral-500 text-sm">No items added</p>}
               {cart.map((item) => (
-                <div key={item._id} className="flex justify-between items-center py-2 border-b border-neutral-700">
+                <div key={item._id} className="flex justify-between items-center py-2 border-b dark:border-neutral-700">
                   <div>
                     <p className="font-medium">{item.name}</p>
-                    <p className="text-neutral-400 text-sm">₱{item.price.toFixed(2)}</p>
+                    <p className="dark:text-neutral-400 text-sm">₱{item.price.toFixed(2)}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <Button size="icon" variant="outline" className="h-8 w-8" onClick={() => updateQty(item._id, item.qty - 1)}>-</Button>
@@ -183,13 +183,13 @@ export default function POSPage() {
                   </div>
                 </div>
               ))}
-              <div className="border-t border-neutral-700 pt-4 space-y-2 text-sm">
+              <div className="border-t dark:border-neutral-700 pt-4 space-y-2 text-sm">
                 <div className="flex justify-between text-xl font-bold pt-2">
                   <span>Total</span>
                   <span>₱{total.toFixed(2)}</span>
                 </div>
               </div>
-              <Button className="w-full mt-4 text-lg py-6" onClick={placeOrder} disabled={placingOrder}>
+              <Button className="w-full mt-4 text-lg py-6 hover:cursor-pointer" onClick={placeOrder} disabled={placingOrder}>
                 {placingOrder ? 'Placing Order...' : 'Place Order'}
               </Button>
             </CardContent>

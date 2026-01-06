@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongoose";
 import { Sale } from "@/models/sale";
 import { Product } from '@/models/product'
+import { requireAuth } from "@/lib/auth";
 
 function generateRefId() {
   return 'INV-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substr(2, 5).toUpperCase()
@@ -9,6 +10,16 @@ function generateRefId() {
 
 
 export async function GET(req: Request) {
+  
+  const user = await requireAuth();
+      
+      if (!user) {
+        return NextResponse.json(
+          { message: 'Unauthorized' },
+          { status: 401 }
+        )
+      }
+
   try {
     await connectDB();
 
@@ -67,6 +78,14 @@ export async function GET(req: Request) {
 
 
 export async function POST(req: Request) {
+  const user = await requireAuth();
+      
+      if (!user) {
+        return NextResponse.json(
+          { message: 'Unauthorized' },
+          { status: 401 }
+        )
+      }
   try {
     await connectDB()
     const body = await req.json()

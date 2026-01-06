@@ -15,9 +15,10 @@ export async function startAutoDiscountCron() {
 
       const settings = await Settings.findOne()
       const discount = settings?.autoDiscountPercent ?? 0
+      const enabled = settings?.autoDiscountEnabled ?? true
 
-      if (discount <= 0) {
-        console.log('[CRON] Discount disabled')
+      if (!enabled || discount <= 0) {
+        console.log('[CRON] Auto-discount disabled')
         return
       }
 
@@ -31,27 +32,68 @@ export async function startAutoDiscountCron() {
         autoDiscounted: false,
       })
 
-    
-
       for (const product of products) {
-        console.log(product)
-        const newPrice = Number(
-          (product.price * (1 - discount / 100)).toFixed(2)
-        )
-
+        const newPrice = Number((product.price * (1 - discount / 100)).toFixed(2))
         product.price = newPrice
         product.autoDiscounted = true
         await product.save()
-
-        console.log(
-          `[CRON] ${product.productId} discounted → ₱${newPrice}`
-        )
+        console.log(`[CRON] ${product.productId} discounted → ₱${newPrice}`)
       }
 
       console.log(`[CRON] Done (${products.length} updated)`)
     },
-    {
-      timezone: 'Asia/Manila',
-    }
+    { timezone: 'Asia/Manila' }
   )
 }
+
+// export async function startAutoDiscountCron() {
+//   cron.schedule(
+//     '* */5 * * * *',
+//     async () => {
+//       console.log('[CRON] Auto-discount started')
+
+//       await connectDB()
+
+//       const settings = await Settings.findOne()
+//       const discount = settings?.autoDiscountPercent ?? 0
+
+//       if (discount <= 0) {
+//         console.log('[CRON] Discount disabled')
+//         return
+//       }
+
+//       const now = new Date()
+//       const weekFromNow = new Date()
+//       weekFromNow.setDate(now.getDate() + 7)
+
+//       const products = await Product.find({
+//         expiry: { $gte: now, $lte: weekFromNow },
+//         stock: { $gt: 0 },
+//         autoDiscounted: false,
+//       })
+
+    
+
+//       for (const product of products) {
+//         console.log(product)
+//         const newPrice = Number(
+//           (product.price * (1 - discount / 100)).toFixed(2)
+//         )
+
+//         product.price = newPrice
+//         product.autoDiscounted = true
+//         await product.save()
+
+//         console.log(
+//           `[CRON] ${product.productId} discounted → ₱${newPrice}`
+//         )
+//       }
+
+//       console.log(`[CRON] Done (${products.length} updated)`)
+//     },
+//     {
+//       timezone: 'Asia/Manila',
+//     }
+//   )
+// }
+

@@ -5,6 +5,7 @@ import bcrypt from 'bcryptjs'
 import { signToken } from '@/lib/jwt'
 
 export async function POST(req: Request) {
+  
   try {
     const { username, password } = await req.json()
     await connectDB()
