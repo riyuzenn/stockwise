@@ -23,7 +23,9 @@ import axios from 'axios'
 const registerSchema = z.object({
   username: z.string().nonempty('Username is required'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
+  secret: z.string()
 })
+
 
 type RegisterValues = z.infer<typeof registerSchema>
 
@@ -90,6 +92,25 @@ export default function RegisterPage() {
                           className="h-12 pl-4"
                           type="password"
                           placeholder="Enter your password"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="secret"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Registration Secret</FormLabel>
+                      <FormControl>
+                        <Input
+                          className="h-12 pl-4"
+                          type="text"
+                          placeholder="Enter the secret key"
                           {...field}
                         />
                       </FormControl>

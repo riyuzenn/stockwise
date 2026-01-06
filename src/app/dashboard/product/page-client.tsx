@@ -155,9 +155,6 @@ export default function ProductPageClient() {
   }
 
 
-  useEffect(() => {
-    axios.post("/api/cron")
-  }, [])
 
   const fetchSuppliers = async () => {
     try {

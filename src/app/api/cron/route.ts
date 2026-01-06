@@ -4,10 +4,10 @@ let started = false
 
 export async function POST(req: Request) {
   console.log(`[[NN]] ${started}`)
-  if (!started) {
-    startAutoDiscountCron()
-    started = true
-  }
+  // if (!started) {
+  //   startAutoDiscountCron()
+  //   started = true
+  // }
 
-  return new Response('Auto discount cron started')
+  // return new Response('Auto discount cron started')
 }
