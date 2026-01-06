@@ -3,7 +3,17 @@ import { connectDB } from '@/lib/mongoose'
 import { Product } from '@/models/product'
 import { Settings } from '@/models/settings'
 
-export async function GET() {
+const CRON_SECRET = process.env.CRON_SECRET || 'defaultsecret'
+
+export async function GET(req: Request) {
+  const url = new URL(req.url)
+  const secret = url.searchParams.get('secret')
+
+  if (!secret || secret !== CRON_SECRET) {
+    console.log('[VERCEL CRON] Unauthorized attempt')
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   console.log('[VERCEL CRON] Auto-discount started')
 
   await connectDB()
