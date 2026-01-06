@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/cron/auto-discount",
-      "schedule": "*/5 * * * *",
+      "schedule": "0 2 * * *",
       "method": "GET"
     }
   ]
