@@ -154,6 +154,14 @@ export default function ProductPageClient() {
     return diffDays >= 0 && diffDays <= days
   }
 
+  const isExpiringCritical = (expiry: string, days = 3) => {
+    const now = new Date()
+    const exp = new Date(expiry)
+    const diffDays = (exp.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+    return diffDays >= 0 && diffDays < days
+  }
+
+
 
 
   const fetchSuppliers = async () => {
@@ -495,13 +503,17 @@ const notifySelectedProducts = async () => {
         ) : (
             <div className="min-w-[800px]">
             <DataTable
-                columns={columns}
-                data={paginatedProducts}
-                rowClassName={(row: Product) => {
-                if (new Date(row.expiry) < new Date()) return 'bg-red-100 dark:bg-red-900/50'
-                if (isExpiringSoon(row.expiry)) return 'bg-yellow-100 dark:bg-yellow-900/40'
+              columns={columns}
+              data={paginatedProducts}
+              rowClassName={(row: Product) => {
+                if (isExpiringCritical(row.expiry))
+                  return 'bg-red-100 dark:bg-red-900/50'
+
+                if (isExpiringSoon(row.expiry))
+                  return 'bg-yellow-100 dark:bg-yellow-900/40'
+
                 return ''
-                }}
+              }}
             />
             </div>
         )}
