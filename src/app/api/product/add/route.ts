@@ -3,6 +3,7 @@ import { NextResponse } from "next/server"
 import { connectDB } from "@/lib/mongoose"
 import { Product } from "@/models/product"
 import { requireAuth } from "@/lib/auth";
+import { AuditLog } from '@/models/audit-log'
 
 export async function POST(req: Request) {
   const user = await requireAuth();
@@ -58,6 +59,16 @@ export async function POST(req: Request) {
     
     console.log(`New Product: ${newProduct}`)
     await newProduct.save()
+
+    
+
+
+    await AuditLog.create({
+      action: 'ADD_PRODUCT',
+      productId: id,
+      productName: name,
+      userId: user?.username,
+    })
     
     return NextResponse.json(
       {

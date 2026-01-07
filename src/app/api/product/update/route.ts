@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongoose";
 import { Product } from "@/models/product";
 import { requireAuth } from "@/lib/auth";
+import { AuditLog } from "@/models/audit-log";
 
 export async function POST(req: Request) {
   const user = await requireAuth();
@@ -16,7 +17,8 @@ export async function POST(req: Request) {
   try {
     await connectDB();
 
-    const { productId, name, price, stock, expiry } = await req.json();
+    const { productId, name, price, stock, expiry, autoDiscounted } = await req.json();
+
 
     if (!productId) {
       return NextResponse.json(
@@ -38,6 +40,24 @@ export async function POST(req: Request) {
     product.price = price ?? product.price;
     product.stock = stock ?? product.stock;
     product.expiry = expiry ? new Date(expiry) : product.expiry;
+    product.autoDiscounted =
+    typeof autoDiscounted === 'boolean'
+      ? autoDiscounted
+      : product.autoDiscounted
+    
+
+    await AuditLog.create({
+    action: 'EDIT_PRODUCT',
+    productId,
+    productName: name,
+    userId: user?.username,
+    metadata: {
+    price,
+    stock,
+    expiry,
+    autoDiscounted,
+    },
+    })
 
     await product.save();
 
