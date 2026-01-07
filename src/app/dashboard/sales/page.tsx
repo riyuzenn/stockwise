@@ -177,10 +177,61 @@ export default function POSPage() {
                     <p className="dark:text-neutral-400 text-sm">₱{item.price.toFixed(2)}</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Button size="icon" variant="outline" className="h-8 w-8" onClick={() => updateQty(item._id, item.qty - 1)}>-</Button>
-                    <span className="w-6 text-center">{item.qty}</span>
-                    <Button size="icon" variant="outline" className="h-8 w-8" onClick={() => updateQty(item._id, item.qty + 1)}>+</Button>
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      className="h-8 w-8"
+                      onClick={() => updateQty(item._id, item.qty - 1)}
+                    >
+                      -
+                    </Button>
+
+                    <Input
+                      type="number"
+                      min={1}
+                      max={item.stock}
+                      value={item.qty === 0 ? '' : item.qty}
+                      onChange={(e) => {
+                        const raw = e.target.value
+
+                        // allow empty while typing
+                        if (raw === '') {
+                          setCart(cart.map((c) =>
+                            c._id === item._id ? { ...c, qty: 0 } : c
+                          ))
+                          return
+                        }
+
+                        const value = Number(raw)
+                        if (Number.isNaN(value)) return
+
+                        if (value > item.stock) {
+                          updateQty(item._id, item.stock)
+                          toast.warning(`Only ${item.stock} items in stock`)
+                        } else {
+                          updateQty(item._id, value)
+                        }
+                      }}
+                      onBlur={() => {
+                        // if user leaves input empty, restore qty to 1
+                        if (item.qty === 0) {
+                          updateQty(item._id, 1)
+                        }
+                      }}
+                      className="w-16 h-8 text-center"
+                    />
+
+
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      className="h-8 w-8"
+                      onClick={() => updateQty(item._id, item.qty + 1)}
+                    >
+                      +
+                    </Button>
                   </div>
+
                 </div>
               ))}
               <div className="border-t dark:border-neutral-700 pt-4 space-y-2 text-sm">
