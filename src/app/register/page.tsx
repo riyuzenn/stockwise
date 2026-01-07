@@ -9,10 +9,11 @@ import AlreadyExists from './already-exists'
 export default async function Register() {
   await connectDB()
   const existingUser = await User.findOne()
-
+/*
   if (existingUser) {
     return <AlreadyExists />
   }
+  */
 
   return <RegisterPage />
 }
