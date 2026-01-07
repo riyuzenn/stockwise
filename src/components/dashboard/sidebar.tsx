@@ -26,6 +26,7 @@ import {
   Settings,
   FileDownIcon,
   Plus,
+  FileClock,
 } from 'lucide-react'
 import LogoutButton from '../ui/logout-button'
 
@@ -34,6 +35,7 @@ const navItems = [
   { name: 'Product', href: '/dashboard/product', icon: Package },
   { name: 'Insights', href: '/dashboard/insights', icon: BarChart3 },
   { name: 'Sales', href: '/dashboard/sales', icon: Weight },
+  {name: 'Audit Log', href: '/dashboard/audit-log', icon: FileClock},
 ]
 
 export function AppSidebar() {
