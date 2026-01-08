@@ -19,9 +19,8 @@ export async function GET() {
 
     const products = await Product.find({
       stock: { $lte: LOW_STOCK_THRESHOLD },
+      notified: false,
     })
-      .sort({ stock: 1 })
-      .lean()
 
     return NextResponse.json({
       success: true,

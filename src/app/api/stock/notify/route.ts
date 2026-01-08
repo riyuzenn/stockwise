@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { connectDB } from "@/lib/mongoose"
 import nodemailer from "nodemailer"
 import { requireAuth } from "@/lib/auth"
+import { Product } from "@/models/product"
 
 interface NotifyItem {
   product: {
@@ -32,6 +33,8 @@ export async function POST(req: Request) {
         { status: 400 }
       )
     }
+
+    
 
     await connectDB()
 
@@ -95,6 +98,17 @@ export async function POST(req: Request) {
 
       sent++
     }
+
+    const productIds = payload.map(p => p.product.productId)
+
+    const pp = await Product.updateMany(
+      { productId: { $in: productIds } },
+      { $set: { notified: true } }
+    )
+
+    console.log(pp)
+
+    
 
     return NextResponse.json({
       success: true,

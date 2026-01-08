@@ -41,9 +41,11 @@ const parsedProductSchema = productFormSchema.transform((data) => ({
 type ProductFormInput = z.infer<typeof productFormSchema>
 type ProductFormParsed = z.infer<typeof parsedProductSchema>
 
+type AddProductDialog = {
+  labelButton?: boolean
+}
 
-
-export function AddProductDialog() {
+export function AddProductDialog({ labelButton }: AddProductDialog) {
   const [open, setOpen] = React.useState(false)
   const [loading, setLoading] = React.useState(false)
 
@@ -72,6 +74,7 @@ export function AddProductDialog() {
       const res = await axios.post("/api/product/add", {
         ...data,
         expiry: expiryDate.toISOString(),
+      
       })
 
       if (res.status === 200 || res.status === 201) {
@@ -88,15 +91,26 @@ export function AddProductDialog() {
     }
   }
 
+  const button = !labelButton ? (
+  
+    <Button
+        variant="secondary"
+        className="size-16 bg-white rounded-full flex items-center justify-center"
+      >
+        <Plus className="size-8 text-black" />
+      </Button>
+    
+  ) : (
+    
+    <Button variant="outline">
+      Add Product
+    </Button>
+    
+  )
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button
-          variant="secondary"
-          className="size-16 bg-white rounded-full flex items-center justify-center"
-        >
-          <Plus className="size-8 text-black" />
-        </Button>
+        {button}
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-[425px] bg-[#1b1b1b] border border-[#2a2a2a] text-white">

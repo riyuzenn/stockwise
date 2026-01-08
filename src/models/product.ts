@@ -8,6 +8,7 @@ export interface IProduct extends Document {
   expiry: Date
   autoDiscounted: boolean
   createdAt: Date
+  notified: boolean
 }
 
 const ProductSchema = new Schema<IProduct>(
@@ -21,6 +22,10 @@ const ProductSchema = new Schema<IProduct>(
       type: Boolean,
       default: false,
     },
+    notified: {
+      type: Boolean,
+      default: false,
+    }
   },
   { timestamps: true }
 )

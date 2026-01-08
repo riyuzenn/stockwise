@@ -54,6 +54,7 @@ export async function POST(req: Request) {
       name,
       price,
       stock,
+      notified: false
     })
 
     

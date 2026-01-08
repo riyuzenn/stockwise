@@ -31,6 +31,7 @@ import { toast } from 'sonner'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Checkbox } from '@/components/ui/checkbox'
 import Image from 'next/image'
+import { AddProductDialog } from '@/components/dashboard/add-product'
 
 interface Product {
   _id: string
@@ -41,6 +42,7 @@ interface Product {
   expiry: string
   createdAt: string
   autoDiscounted: boolean
+  notifiedAt?: string | null
 }
 
 interface IStats {
@@ -204,6 +206,7 @@ export default function ProductPageClient() {
 
       await axios.post('/api/stock/notify', { payload })
       toast.success('Suppliers notified successfully')
+      fetchLowStock()
       setNotifyOpen(false)
       setSelectedSuppliers([])
       setSelectedProducts([])
@@ -460,19 +463,38 @@ export default function ProductPageClient() {
 
     <div className="space-y-2 max-h-[300px] overflow-auto">
       {lowStock.map((p) => (
-        <label key={p._id} className="flex items-center gap-3 rounded-md border p-3 cursor-pointer">
+        <label
+          key={p._id}
+          className={`flex items-center gap-3 rounded-md border p-3
+            ${p.notifiedAt ? 'opacity-60 cursor-not-allowed bg-muted' : 'cursor-pointer'}
+          `}
+        >
           <Checkbox
-            checked={selectedProducts.some(sp => sp._id === p._id)}
-            onCheckedChange={(checked) => {
-              setSelectedProducts((prev) =>
-                checked ? [...prev, p] : prev.filter(sp => sp._id !== p._id)
-              )
-            }}
-          />
+              disabled={!!p.notifiedAt}
+              checked={selectedProducts.some(sp => sp._id === p._id)}
+              onCheckedChange={(checked) => {
+                if (p.notifiedAt) return
+
+                setSelectedProducts((prev) =>
+                  checked ? [...prev, p] : prev.filter(sp => sp._id !== p._id)
+                )
+              }}
+            />
+
           <div>
-            <p className="font-medium">{p.name}</p>
-            <p className="text-sm text-muted-foreground">Stock: {p.stock}</p>
+            <p className="font-medium flex items-center gap-2">
+              {p.name}
+              {p.notifiedAt && (
+                <span className="text-xs text-green-600 font-semibold">
+                  ✓ Notified
+                </span>
+              )}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Stock: {p.stock}
+            </p>
           </div>
+
         </label>
       ))}
     </div>
@@ -490,12 +512,15 @@ export default function ProductPageClient() {
 
 
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <Input
-          placeholder="Search product..."
-          defaultValue={search}
-          onChange={(e) => handleSearchChange(e.target.value)}
-          className="sm:w-[250px]"
-        />
+        <div className='flex items-center gap-5'>
+          <Input
+            placeholder="Search product..."
+            defaultValue={search}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            className="sm:w-[250px]"
+          />
+          <AddProductDialog labelButton={true} />
+        </div>
         <div className="flex gap-2">
           <Select value={filter} onValueChange={handleFilterChange}>
             <SelectTrigger className="w-[180px]">
