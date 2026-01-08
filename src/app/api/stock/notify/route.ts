@@ -8,9 +8,11 @@ interface NotifyItem {
     productId: string
     name: string
     stock: number
+    orderQty: number
   }
   emails: string[]
 }
+
 
 export async function POST(req: Request) {
   const user = await requireAuth();
@@ -62,8 +64,7 @@ export async function POST(req: Request) {
 
     for (const [email, products] of Object.entries(supplierMap)) {
       const html = `
-        <h2>⚠️ Low Stock Alert</h2>
-        <p>The following products are low on stock:</p>
+        <h2>Low Stock Alert</h2>
         <ul>
           ${products
             .map(
@@ -72,12 +73,23 @@ export async function POST(req: Request) {
             )
             .join("")}
         </ul>
+
+        <h2>Purchase Order</h2>
+        <ul>
+          ${products
+            .map(
+              (p) =>
+                `<li><strong>${p.name}</strong> — Order Quantity: <b>${p.orderQty}</b></li>`
+            )
+            .join("")}
+        </ul>
       `
+
 
       await transporter.sendMail({
         from: `"StockWise" <${process.env.EMAIL_USER}>`,
         to: email,
-        subject: "⚠️ Low Stock Alert",
+        subject: "Low Stock Alert",
         html,
       })
 

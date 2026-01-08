@@ -134,6 +134,9 @@ export default function ProductPageClient() {
   })
 
   const [notifyOpen, setNotifyOpen] = useState(false)
+  const [poOpen, setPoOpen] = useState(false)
+  const [purchaseQty, setPurchaseQty] = useState<Record<string, number>>({})
+
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [selectedSuppliers, setSelectedSuppliers] = useState<string[]>([])
   const [notifying, setNotifying] = useState(false)
@@ -163,7 +166,6 @@ export default function ProductPageClient() {
 
 
 
-
   const fetchSuppliers = async () => {
     try {
       const res = await axios.get('/api/supplier')
@@ -175,36 +177,52 @@ export default function ProductPageClient() {
   
 
   // State to track selected low-stock products
-const [selectedProducts, setSelectedProducts] = useState<Product[]>([])
+  const [selectedProducts, setSelectedProducts] = useState<Product[]>([])
 
-// Function to notify selected products
-const notifySelectedProducts = async () => {
-  if (selectedSuppliers.length === 0) {
-    toast.error('Select at least one supplier')
-    return
-  }
-  if (selectedProducts.length === 0) {
-    toast.error('Select at least one product')
-    return
+  // Function to notify selected products
+  const notifySelectedProducts = async () => {
+    if (selectedSuppliers.length === 0) {
+      toast.error('Select at least one supplier')
+      return
+    }
+    if (selectedProducts.length === 0) {
+      toast.error('Select at least one product')
+      return
+    }
+
+    setNotifying(true)
+    try {
+      const payload = selectedProducts.map((p) => ({
+        product: {
+          productId: p.productId,
+          name: p.name,
+          stock: p.stock,
+          orderQty: purchaseQty[p.productId],
+        },
+        emails: selectedSuppliers,
+      }))
+
+      await axios.post('/api/stock/notify', { payload })
+      toast.success('Suppliers notified successfully')
+      setNotifyOpen(false)
+      setSelectedSuppliers([])
+      setSelectedProducts([])
+    } catch {
+      toast.error('Failed to notify suppliers')
+    } finally {
+      setNotifying(false)
+    }
   }
 
-  setNotifying(true)
-  try {
-    const payload = selectedProducts.map((p) => ({
-      product: { productId: p.productId, name: p.name, stock: p.stock },
-      emails: selectedSuppliers,
-    }))
-    await axios.post('/api/stock/notify', { payload })
-    toast.success('Suppliers notified successfully')
-    setNotifyOpen(false)
-    setSelectedSuppliers([])
-    setSelectedProducts([])
-  } catch {
-    toast.error('Failed to notify suppliers')
-  } finally {
-    setNotifying(false)
+  const openPurchaseOrderDialog = () => {
+    const initialQty: Record<string, number> = {}
+    selectedProducts.forEach(p => {
+      initialQty[p.productId] = 1
+    })
+    setPurchaseQty(initialQty)
+    setPoOpen(true)
   }
-}
+
 
 
   useEffect(() => {
@@ -462,7 +480,7 @@ const notifySelectedProducts = async () => {
     <Button
       className="mt-4"
       variant="destructive"
-      onClick={() => setNotifyOpen(true)}
+      onClick={openPurchaseOrderDialog}
       disabled={selectedProducts.length === 0}
     >
       Notify Supplier
@@ -593,6 +611,57 @@ const notifySelectedProducts = async () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={poOpen} onOpenChange={setPoOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create Purchase Order</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {selectedProducts.map(p => (
+              <div key={p.productId} className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="font-medium">{p.name}</p>
+                  <p className="text-sm text-muted-foreground">
+                    Current stock: {p.stock}
+                  </p>
+                </div>
+
+                <Input
+                  type="number"
+                  min={1}
+                  className="w-24"
+                  value={purchaseQty[p.productId] ?? 1}
+                  onChange={(e) =>
+                    setPurchaseQty(prev => ({
+                      ...prev,
+                      [p.productId]: Number(e.target.value),
+                    }))
+                  }
+                />
+              </div>
+            ))}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPoOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                setPoOpen(false)
+                setNotifyOpen(true)
+              }}
+            >
+              Continue
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+
     </div>
   )
 }
