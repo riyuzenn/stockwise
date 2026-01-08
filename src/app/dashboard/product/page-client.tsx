@@ -42,7 +42,7 @@ interface Product {
   expiry: string
   createdAt: string
   autoDiscounted: boolean
-  notifiedAt?: string | null
+  notified?: string | null
 }
 
 interface IStats {
@@ -466,14 +466,14 @@ export default function ProductPageClient() {
         <label
           key={p._id}
           className={`flex items-center gap-3 rounded-md border p-3
-            ${p.notifiedAt ? 'opacity-60 cursor-not-allowed bg-muted' : 'cursor-pointer'}
+            ${p.notified ? 'opacity-60 cursor-not-allowed bg-muted' : 'cursor-pointer'}
           `}
         >
           <Checkbox
-              disabled={!!p.notifiedAt}
+              disabled={!!p.notified}
               checked={selectedProducts.some(sp => sp._id === p._id)}
               onCheckedChange={(checked) => {
-                if (p.notifiedAt) return
+                if (p.notified) return
 
                 setSelectedProducts((prev) =>
                   checked ? [...prev, p] : prev.filter(sp => sp._id !== p._id)
@@ -484,7 +484,7 @@ export default function ProductPageClient() {
           <div>
             <p className="font-medium flex items-center gap-2">
               {p.name}
-              {p.notifiedAt && (
+              {p.notified && (
                 <span className="text-xs text-green-600 font-semibold">
                   ✓ Notified
                 </span>
