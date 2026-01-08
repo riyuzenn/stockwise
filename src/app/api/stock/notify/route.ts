@@ -3,6 +3,7 @@ import { connectDB } from "@/lib/mongoose"
 import nodemailer from "nodemailer"
 import { requireAuth } from "@/lib/auth"
 import { Product } from "@/models/product"
+import { AuditLog } from "@/models/audit-log"
 
 interface NotifyItem {
   product: {
@@ -66,6 +67,15 @@ export async function POST(req: Request) {
     let sent = 0
 
     for (const [email, products] of Object.entries(supplierMap)) {
+      products.map( async (p) => {
+          await AuditLog.create({
+            action: 'NOTIFY_PRODUCT',
+            productId: p.productId,
+            productName: p.name,
+            userId: user?.username,
+        })
+
+      }) 
       const html = `
         <h2>Low Stock Alert</h2>
         <ul>
@@ -109,6 +119,8 @@ export async function POST(req: Request) {
     console.log(pp)
 
     
+
+  
 
     return NextResponse.json({
       success: true,

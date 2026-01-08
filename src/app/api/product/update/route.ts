@@ -36,14 +36,29 @@ export async function POST(req: Request) {
       );
     }
 
+    const stockChanged =
+      typeof stock === 'number' && stock !== product.stock;
+    
+    console.log(stockChanged)
+
     product.name = name ?? product.name;
     product.price = price ?? product.price;
-    product.stock = stock ?? product.stock;
+
+    if (typeof stock === 'number') {
+      product.stock = stock;
+
+      if (stockChanged) {
+        product.notified = false;
+      }
+    }
+
     product.expiry = expiry ? new Date(expiry) : product.expiry;
+
     product.autoDiscounted =
-    typeof autoDiscounted === 'boolean'
-      ? autoDiscounted
-      : product.autoDiscounted
+      typeof autoDiscounted === 'boolean'
+        ? autoDiscounted
+        : product.autoDiscounted;
+
     
 
     await AuditLog.create({

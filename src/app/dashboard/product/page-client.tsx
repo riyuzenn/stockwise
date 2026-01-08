@@ -311,6 +311,7 @@ export default function ProductPageClient() {
   const handleUpdated = () => {
     fetchProducts()
     fetchStats()
+    fetchLowStock()
   }
 
   const filteredProducts = useMemo(() => {

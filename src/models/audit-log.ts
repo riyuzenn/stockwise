@@ -6,7 +6,7 @@ const AuditLogSchema = new Schema(
   {
     action: {
       type: String,
-      enum: ['ADD_PRODUCT', 'EDIT_PRODUCT', 'DELETE_PRODUCT'],
+      enum: ['ADD_PRODUCT', 'EDIT_PRODUCT', 'DELETE_PRODUCT', 'NOTIFY_PRODUCT'],
       required: true,
     },
     productId: {
