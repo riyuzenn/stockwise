@@ -41,11 +41,12 @@ const parsedProductSchema = productFormSchema.transform((data) => ({
 type ProductFormInput = z.infer<typeof productFormSchema>
 type ProductFormParsed = z.infer<typeof parsedProductSchema>
 
-type AddProductDialog = {
+interface AddProductDialogProps {
   labelButton?: boolean
+  onAdded?: () => void
 }
 
-export function AddProductDialog({ labelButton }: AddProductDialog) {
+export function AddProductDialog({ labelButton, onAdded }: AddProductDialogProps) {
   const [open, setOpen] = React.useState(false)
   const [loading, setLoading] = React.useState(false)
 
@@ -79,6 +80,7 @@ export function AddProductDialog({ labelButton }: AddProductDialog) {
 
       if (res.status === 200 || res.status === 201) {
         toast.success("Product added successfully!")
+        onAdded?.() 
         reset()
         setOpen(false)
       } else {

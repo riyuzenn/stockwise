@@ -520,7 +520,7 @@ export default function ProductPageClient() {
             onChange={(e) => handleSearchChange(e.target.value)}
             className="sm:w-[250px]"
           />
-          <AddProductDialog labelButton={true} />
+          <AddProductDialog onAdded={handleUpdated} labelButton={true} />
         </div>
         <div className="flex gap-2">
           <Select value={filter} onValueChange={handleFilterChange}>
